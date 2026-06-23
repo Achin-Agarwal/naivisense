@@ -10,6 +10,7 @@
 
 # Credentials — never commit
 credentials
+credentials.md
 .env
 
 # Claude Code local permissions (project agents remain shareable)
