@@ -6,10 +6,12 @@ export const CreateChildSchema = z.object({
   dob:              z.string().datetime({ offset: true }),
   gender:           z.enum(['boy', 'girl', 'other']),
   diagnosis:        z.array(z.string()).min(1),
-  severity:         z.enum(['mild', 'moderate', 'high_support']),
+  severity:         z.enum(['mild', 'moderate', 'severe']),
   primary_concerns: z.array(z.string()).default([]),
   therapy_targets:  z.array(z.string()).min(1),
   parent_id:        z.string().length(24),
+  enrollment_mode:  z.enum(['online', 'offline', 'hybrid']).default('offline'),
+  parent_email:     z.string().email().optional(),
   therapists: z.array(z.object({
     therapist_id: z.string().length(24),
     therapy_type: z.string().min(1),

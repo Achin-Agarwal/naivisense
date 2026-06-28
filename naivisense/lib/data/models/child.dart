@@ -103,7 +103,7 @@ class ChildModel {
       final now = DateTime.now();
       int age = now.year - dob.year;
       if (now.month < dob.month ||
-          (now.month == dob.month && now.day < dob.day)) age--;
+          (now.month == dob.month && now.day < dob.day)) { age--; }
       return age < 0 ? 0 : age;
     } catch (_) { return 0; }
   }

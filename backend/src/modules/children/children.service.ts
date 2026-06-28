@@ -8,7 +8,7 @@ export async function listChildren(user: AuthPayload) {
   const filter =
     user.role === 'therapist'   ? { 'therapists.therapist_id': user.sub } :
     user.role === 'parent'      ? { parent_id:                 user.sub } :
-    {};  // center_head sees all
+    {};  // center_head, lead_therapist, clinical_psychologist, dietician see all
 
   const query = ChildModel.find(filter).sort({ created_at: -1 });
 
@@ -64,9 +64,12 @@ export async function getSnapshot(id: string, user: AuthPayload) {
 }
 
 function canAccess(child: { therapists?: { therapist_id: unknown }[]; parent_id: unknown }, user: AuthPayload): boolean {
-  if (user.role === 'center_head') return true;
+  if (user.role === 'center_head')           return true;
+  if (user.role === 'lead_therapist')        return true;
+  if (user.role === 'clinical_psychologist') return true;
+  if (user.role === 'dietician')             return true;
   if (user.role === 'therapist')
     return (child.therapists ?? []).some((t) => String(t.therapist_id) === user.sub);
-  if (user.role === 'parent')      return String(child.parent_id) === user.sub;
+  if (user.role === 'parent')                return String(child.parent_id) === user.sub;
   return false;
 }

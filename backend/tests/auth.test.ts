@@ -24,7 +24,7 @@ describe('POST /api/v1/auth/register', () => {
   });
 
   it('rejects duplicate phone with 409 CONFLICT', async () => {
-    const data = { name: 'Test', phone: '+919876543211', password: 'abc123', role: 'parent' };
+    const data = { name: 'Test', phone: '+919876543211', password: 'abc12345', role: 'parent' };
     await request(app).post(`${base}/register`).send(data);
     const res = await request(app).post(`${base}/register`).send(data);
     expect(res.status).toBe(409);
@@ -33,7 +33,7 @@ describe('POST /api/v1/auth/register', () => {
 
   it('rejects invalid phone format', async () => {
     const res = await request(app).post(`${base}/register`).send({
-      name: 'Test', phone: 'not-a-phone', password: 'abc123', role: 'parent',
+      name: 'Test', phone: 'not-a-phone', password: 'abc12345', role: 'parent',
     });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('INVALID_INPUT');
@@ -70,7 +70,7 @@ describe('Protected route', () => {
 
   it('returns 200 with valid token', async () => {
     const reg = await request(app).post(`${base}/register`).send({
-      name: 'Center Head', phone: '+919111111111', password: 'pass123', role: 'center_head',
+      name: 'Center Head', phone: '+919111111111', password: 'pass1234', role: 'center_head',
     });
     const res = await request(app)
       .get('/api/v1/users/me')

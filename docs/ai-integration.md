@@ -108,8 +108,8 @@ packages = ["app"]
 ### 3.2 .env.example
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
-VOYAGE_API_KEY=pa-...
+ANTHROPIC_API_KEY=<anthropic-api-key>
+VOYAGE_API_KEY=<voyage-api-key>
 MONGO_URL=mongodb://localhost:27017/naivisense
 AI_SERVICE_TOKEN=shared-secret-between-node-and-python
 PORT=8001

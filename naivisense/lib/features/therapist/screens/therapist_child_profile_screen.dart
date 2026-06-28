@@ -6,11 +6,16 @@ import '../../../data/models/child.dart';
 import '../../../data/models/diet_plan.dart';
 import '../../../data/models/home_plan.dart';
 import '../../../data/models/session.dart';
+import '../../../data/models/goal.dart';
+import '../../../data/models/review.dart';
+import '../../../data/models/video_item.dart';
+import '../../../data/models/ai_draft.dart';
 import '../../../shared/widgets/trend_chart.dart';
 import '../../../features/reports/screens/weekly_report_screen.dart';
 import '../../../features/assessments/providers/assessment_provider.dart';
 import '../../../features/assessments/screens/assessment_wizard_screen.dart';
 import '../../../features/assessments/screens/assessment_result_screen.dart';
+import '../../../data/repositories/ai_repository.dart';
 import '../providers/therapist_provider.dart';
 import 'create_session_screen.dart';
 import 'session_notes_screen.dart';
@@ -22,18 +27,28 @@ class TherapistChildProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions    = ref.watch(therapistChildSessionsProvider(child.id));
+    final nextSession = ref.watch(therapistChildNextSessionProvider(child.id));
     final plan        = ref.watch(therapistChildPlanProvider(child.id));
     final dietPlan    = ref.watch(therapistChildDietPlanProvider(child.id));
     final assessments = ref.watch(childAssessmentsProvider(child.id));
+    final goals       = ref.watch(therapistChildGoalsProvider(child.id));
+    final reviews     = ref.watch(therapistChildReviewsProvider(child.id));
+    final videos      = ref.watch(therapistChildVideosProvider(child.id));
+    final aiDrafts    = ref.watch(therapistAiDraftsProvider(child.id));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(therapistChildSessionsProvider(child.id));
+          ref.invalidate(therapistChildNextSessionProvider(child.id));
           ref.invalidate(therapistChildPlanProvider(child.id));
           ref.invalidate(therapistChildDietPlanProvider(child.id));
           ref.invalidate(childAssessmentsProvider(child.id));
+          ref.invalidate(therapistChildGoalsProvider(child.id));
+          ref.invalidate(therapistChildReviewsProvider(child.id));
+          ref.invalidate(therapistChildVideosProvider(child.id));
+          ref.invalidate(therapistAiDraftsProvider(child.id));
         },
         child: CustomScrollView(
           slivers: [
@@ -44,6 +59,8 @@ class TherapistChildProfileScreen extends ConsumerWidget {
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 16),
                   _buildDiagnosis(context),
+                  const SizedBox(height: 16),
+                  _buildNextSession(context, nextSession),
                   const SizedBox(height: 16),
                   _buildQuickStats(sessions),
                   const SizedBox(height: 20),
@@ -56,6 +73,14 @@ class TherapistChildProfileScreen extends ConsumerWidget {
                   _buildActivePlan(context, plan),
                   const SizedBox(height: 24),
                   _buildDietPlan(context, dietPlan),
+                  const SizedBox(height: 24),
+                  _buildGoals(context, ref, goals),
+                  const SizedBox(height: 24),
+                  _buildReviews(context, reviews),
+                  const SizedBox(height: 24),
+                  _buildVideos(context, videos),
+                  const SizedBox(height: 24),
+                  _buildAiDrafts(context, ref, aiDrafts),
                   const SizedBox(height: 24),
                   _buildSessionHistory(context, ref, sessions),
                 ]),
@@ -73,7 +98,7 @@ class TherapistChildProfileScreen extends ConsumerWidget {
     final (sevLabel, sevColor) = switch (child.severity) {
       'mild'         => ('Mild',         AppColors.mintGreen),
       'moderate'     => ('Moderate',     AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _              => ('—',            Colors.white70),
     };
 
@@ -147,7 +172,70 @@ class TherapistChildProfileScreen extends ConsumerWidget {
     );
   }
 
-  // ── Diagnosis ────────────────────────────────────────────────────────────
+  // ── Next Session ─────────────────────────────────────────────────────────
+
+  Widget _buildNextSession(BuildContext context, AsyncValue<SessionModel?> next) {
+    return next.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (session) {
+        if (session == null) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.divider),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.event_outlined, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: 8),
+                const Text('No upcoming session scheduled',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              ],
+            ),
+          );
+        }
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primaryBlue.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.event, size: 18, color: AppColors.primaryBlue),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Next Session',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryBlue)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${session.typeLabel}  •  '
+                      '${AppDateUtils.formatDate(session.scheduledAt)}  '
+                      '${AppDateUtils.formatTime(session.scheduledAt)}  '
+                      '•  ${session.durationMin} min',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// ── Diagnosis ────────────────────────────────────────────────────────────
 
   Widget _buildDiagnosis(BuildContext context) {
     return Wrap(
@@ -395,7 +483,7 @@ class TherapistChildProfileScreen extends ConsumerWidget {
             child: Center(
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.primaryBlue))),
-        error: (_, __) => _emptyMsg('Could not load plan'),
+        error: (_, _) => _emptyMsg('Could not load plan'),
         data: (p) {
           if (p == null) return _emptyMsg('No active home plan');
           return Column(
@@ -482,7 +570,7 @@ class TherapistChildProfileScreen extends ConsumerWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: sorted.length,
-            separatorBuilder: (_, __) => const Divider(height: 16),
+            separatorBuilder: (_, _) => const Divider(height: 16),
             itemBuilder: (_, i) =>
                 _SessionRow(session: sorted[i], child: child, ref: ref),
           );
@@ -503,7 +591,7 @@ class TherapistChildProfileScreen extends ConsumerWidget {
             child: Center(
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.primaryBlue))),
-        error: (_, __) => _emptyMsg('Could not load diet plan'),
+        error: (_, _) => _emptyMsg('Could not load diet plan'),
         data: (p) {
           if (p == null) return _emptyMsg('No active diet plan');
           return Column(
@@ -598,6 +686,161 @@ class TherapistChildProfileScreen extends ConsumerWidget {
     );
   }
 
+  // ── Videos ────────────────────────────────────────────────────────────────
+
+  Widget _buildVideos(BuildContext context,
+      AsyncValue<List<VideoItemModel>> videos) {
+    return _SectionCard(
+      title: 'Videos',
+      icon:  Icons.videocam_outlined,
+      child: videos.when(
+        loading: () => const SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue))),
+        error: (_, _) => _emptyMsg('Could not load videos'),
+        data: (list) {
+          if (list.isEmpty) return _emptyMsg('No videos uploaded yet');
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const Divider(height: 16),
+            itemBuilder: (_, i) => _VideoRow(video: list[i]),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── AI Drafts ─────────────────────────────────────────────────────────────
+
+  Widget _buildAiDrafts(BuildContext context, WidgetRef ref,
+      AsyncValue<List<AiDraftModel>> aiDrafts) {
+    return _SectionCard(
+      title: 'AI Plans & Insights',
+      icon:  Icons.auto_awesome_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _AiButton(
+                label: 'Therapy Plan',
+                onTap: () => _generateAi(context, ref, 'therapy_plan'),
+              ),
+              _AiButton(
+                label: 'Home Plan',
+                onTap: () => _generateAi(context, ref, 'home_plan'),
+              ),
+              _AiButton(
+                label: 'Activities',
+                onTap: () => _generateAi(context, ref, 'reinforcement_activities'),
+              ),
+              _AiButton(
+                label: 'Insights',
+                onTap: () => _generateAi(context, ref, 'insights'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+          aiDrafts.when(
+            loading: () => const SizedBox(
+                height: 40,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue))),
+            error: (_, _) => _emptyMsg('Could not load drafts'),
+            data: (list) {
+              if (list.isEmpty) return _emptyMsg('No AI drafts yet — tap a button above');
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length > 5 ? 5 : list.length,
+                separatorBuilder: (_, _) => const Divider(height: 12),
+                itemBuilder: (_, i) => _AiDraftRow(
+                  draft: list[i],
+                  onApprove: () async {
+                    await ref.read(aiRepositoryProvider).approveDraft(list[i].id);
+                    ref.invalidate(therapistAiDraftsProvider(child.id));
+                  },
+                  onView: () => _showDraftContent(context, list[i]),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateAi(BuildContext context, WidgetRef ref, String type) async {
+    final notifier = ref.read(aiGenerateProvider.notifier);
+    await notifier.generate(child.id, type);
+    final state = ref.read(aiGenerateProvider);
+    if (state.error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${state.error}'), backgroundColor: AppColors.softCoral),
+      );
+    } else if (state.draft != null && context.mounted) {
+      ref.invalidate(therapistAiDraftsProvider(child.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('AI draft generated successfully')),
+      );
+      _showDraftContent(context, state.draft!);
+    }
+  }
+
+  void _showDraftContent(BuildContext context, AiDraftModel draft) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (_, controller) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(draft.typeLabel,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text(
+                '${draft.isApproved ? "Approved" : "Pending"} • ${draft.modelUsed}',
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const Divider(height: 20),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: controller,
+                  child: Text(draft.content,
+                      style: const TextStyle(fontSize: 13, height: 1.6)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _emptyMsg(String msg) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Center(
@@ -605,6 +848,256 @@ class TherapistChildProfileScreen extends ConsumerWidget {
               style: const TextStyle(color: AppColors.textSecondary)),
         ),
       );
+
+  // ── Goals ─────────────────────────────────────────────────────────────────
+
+  Widget _buildGoals(BuildContext context, WidgetRef ref,
+      AsyncValue<List<GoalModel>> goals) {
+    return _SectionCard(
+      title: 'Therapy Goals',
+      icon:  Icons.flag_outlined,
+      child: goals.when(
+        loading: () => const SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue))),
+        error: (_, _) => _emptyMsg('Could not load goals'),
+        data: (list) {
+          final active = list.where((g) => g.status != 'completed').toList();
+          if (list.isEmpty) return _emptyMsg('No goals set yet');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...active.take(5).map((g) => _GoalRow(goal: g)),
+              if (list.any((g) => g.isCompleted)) ...[
+                const SizedBox(height: 8),
+                Text('${list.where((g) => g.isCompleted).length} goal(s) completed',
+                    style: const TextStyle(fontSize: 12, color: AppColors.mintGreen)),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ── Reviews ───────────────────────────────────────────────────────────────
+
+  Widget _buildReviews(BuildContext context,
+      AsyncValue<List<ReviewModel>> reviews) {
+    return _SectionCard(
+      title: 'Reviews',
+      icon:  Icons.summarize_outlined,
+      child: reviews.when(
+        loading: () => const SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue))),
+        error: (_, _) => _emptyMsg('Could not load reviews'),
+        data: (list) {
+          if (list.isEmpty) return _emptyMsg('No reviews yet');
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const Divider(height: 16),
+            itemBuilder: (_, i) => _ReviewRow(review: list[i]),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── Goal Row ──────────────────────────────────────────────────────────────
+
+class _GoalRow extends StatelessWidget {
+  final GoalModel goal;
+  const _GoalRow({required this.goal});
+
+  @override
+  Widget build(BuildContext context) {
+    final (statusColor, icon) = switch (goal.status) {
+      'completed' => (AppColors.mintGreen,  Icons.check_circle_outline),
+      'active'    => (AppColors.primaryBlue, Icons.play_circle_outline),
+      'accepted'  => (AppColors.mintGreen,  Icons.thumb_up_outlined),
+      'paused'    => (AppColors.warmYellow,  Icons.pause_circle_outline),
+      _           => (AppColors.textSecondary, Icons.radio_button_unchecked),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: statusColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(goal.title,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                if (goal.description != null && goal.description!.isNotEmpty)
+                  Text(goal.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(goal.statusLabel,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Review Row ────────────────────────────────────────────────────────────
+
+class _ReviewRow extends StatelessWidget {
+  final ReviewModel review;
+  const _ReviewRow({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    final isPublished = review.isPublished;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                review.reviewType == 'quarterly'
+                    ? Icons.calendar_today
+                    : Icons.calendar_view_month,
+                size: 14,
+                color: AppColors.primaryBlue,
+              ),
+              const SizedBox(width: 6),
+              Text(review.typeLabel,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: (isPublished ? AppColors.mintGreen : AppColors.warmYellow)
+                      .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  isPublished ? 'Published' : 'Draft',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isPublished ? AppColors.mintGreen : AppColors.warmYellow),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${review.periodStart.day}/${review.periodStart.month}/${review.periodStart.year}'
+            ' → '
+            '${review.periodEnd.day}/${review.periodEnd.month}/${review.periodEnd.year}',
+            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            review.textObservations,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          if (review.adminNotes != null && review.adminNotes!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('Admin: ${review.adminNotes}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primaryBlue,
+                    fontStyle: FontStyle.italic)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Video Row ─────────────────────────────────────────────────────────────
+
+class _VideoRow extends StatelessWidget {
+  final VideoItemModel video;
+  const _VideoRow({required this.video});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.play_circle_outline,
+                color: AppColors.primaryBlue, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(video.title,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(video.categoryLabel,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary)),
+                if (video.description != null &&
+                    video.description!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(video.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary)),
+                ],
+              ],
+            ),
+          ),
+          if (!video.isParentVisible)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.warmYellow.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('Internal',
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.warmYellow)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Stat Chip ─────────────────────────────────────────────────────────────
@@ -912,6 +1405,97 @@ class _AssessmentTypeButton extends StatelessWidget {
     );
   }
 }
+
+// ── AI Button ─────────────────────────────────────────────────────────────
+
+class _AiButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _AiButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6C63FF)),
+            const SizedBox(width: 5),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6C63FF))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── AI Draft Row ──────────────────────────────────────────────────────────
+
+class _AiDraftRow extends StatelessWidget {
+  final AiDraftModel draft;
+  final VoidCallback onApprove;
+  final VoidCallback onView;
+  const _AiDraftRow({required this.draft, required this.onApprove, required this.onView});
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = draft.isApproved ? AppColors.mintGreen : AppColors.warmYellow;
+    return Row(
+      children: [
+        const Icon(Icons.description_outlined, size: 16, color: AppColors.primaryBlue),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(draft.typeLabel,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(
+                draft.isApproved ? 'Approved' : 'Pending review',
+                style: TextStyle(fontSize: 11, color: statusColor),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: onView,
+          style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+          child: const Text('View', style: TextStyle(fontSize: 12)),
+        ),
+        if (draft.isPending) ...[
+          const SizedBox(width: 4),
+          TextButton(
+            onPressed: onApprove,
+            style: TextButton.styleFrom(
+                foregroundColor: AppColors.mintGreen,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            child: const Text('Approve', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Assessment History Row ────────────────────────────────────────────────
 
 class _AssessmentHistoryRow extends StatelessWidget {
   final dynamic assessment;

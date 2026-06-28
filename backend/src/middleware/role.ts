@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { apiError }                         from './auth';
 
-type Role = 'center_head' | 'therapist' | 'parent';
+type Role = 'center_head' | 'therapist' | 'lead_therapist' | 'parent' | 'dietician' | 'clinical_psychologist';
 
 export function requireRole(...roles: Role[]) {
   return (req: Request, res: Response, next: NextFunction): void => {

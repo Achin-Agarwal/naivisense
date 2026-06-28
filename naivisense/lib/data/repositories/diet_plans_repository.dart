@@ -22,7 +22,12 @@ class DietPlansRepository {
     }
   }
 
-  // Future methods for create + logMeal can be added later when UI for creation/logging is needed
-  // Future<DietPlanModel> createPlan(...) { ... }
-  // Future<void> logMeal(...) { ... }
+  Future<DietPlanModel> createPlan(Map<String, dynamic> data) async {
+    try {
+      final res = await _api.post('/diet-plans', data: data);
+      return DietPlanModel.fromJson(res.data as Map<String, dynamic>);
+    } catch (e) {
+      throw ErrorHandlerService.handle(e);
+    }
+  }
 }

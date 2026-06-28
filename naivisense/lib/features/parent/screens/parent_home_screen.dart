@@ -25,6 +25,11 @@ class ParentHomeScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: 'AI Chat',
+            onPressed: () => context.go('/parent/chatbot'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
@@ -58,7 +63,7 @@ class ParentHomeScreen extends ConsumerWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: list.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (_, i) => _ChildSummaryCard(child: list[i]),
                       );
                     },
@@ -287,7 +292,7 @@ class _SeverityBadge extends StatelessWidget {
     final (label, color) = switch (severity) {
       'mild'         => ('Mild', AppColors.mintGreen),
       'moderate'     => ('Moderate', AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _              => ('—', AppColors.textSecondary),
     };
     return Container(

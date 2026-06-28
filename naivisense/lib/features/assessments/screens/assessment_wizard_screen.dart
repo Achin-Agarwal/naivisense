@@ -540,7 +540,7 @@ class _BehavioralItemCardState extends State<_BehavioralItemCard> {
                       setState(() => _present = v);
                       _notify();
                     },
-                    activeColor: AppColors.softCoral,
+                    activeThumbColor: AppColors.softCoral,
                   ),
                 ),
                 Text(

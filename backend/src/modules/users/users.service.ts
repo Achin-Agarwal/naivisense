@@ -7,6 +7,7 @@ import { uploadToCloudinary }    from '../../config/cloudinary';
 import type { AuthPayload }      from '../../middleware/auth';
 import type { EnrollTherapistInput } from './users.therapist-schema';
 import type { EnrollParentInput }    from './users.parent-schema';
+import type { EnrollStaffInput }     from './users.staff-schema';
 
 export async function getMe(user: AuthPayload) {
   const doc = await UserModel.findById(user.sub).lean();
@@ -157,6 +158,25 @@ export async function enrollParent(input: EnrollParentInput, caller: AuthPayload
     email:         input.email,
     password_hash: hash,
     role:          'parent',
+    is_verified:   true,
+  });
+
+  return { user };
+}
+
+export async function enrollStaff(input: EnrollStaffInput, caller: AuthPayload) {
+  if (caller.role !== 'center_head') throw new AppError('FORBIDDEN', 'Access denied');
+
+  const existing = await UserModel.findOne({ phone: input.phone });
+  if (existing) throw new AppError('CONFLICT', 'Phone number already registered');
+
+  const hash = await bcrypt.hash(input.password, 12);
+  const user = await UserModel.create({
+    name:          input.name,
+    phone:         input.phone,
+    email:         input.email,
+    password_hash: hash,
+    role:          input.role,
     is_verified:   true,
   });
 

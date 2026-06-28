@@ -119,7 +119,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                       error: (e, _) => Text('Failed to load: $e',
                           style: const TextStyle(color: AppColors.softCoral)),
                       data: (list) => DropdownButtonFormField<String>(
-                        value: _childId,
+                        initialValue: _childId,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.person_outline),
                           hintText: 'Select child',

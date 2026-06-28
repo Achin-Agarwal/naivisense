@@ -29,4 +29,16 @@ class AlertsRepository {
       throw ErrorHandlerService.handle(e);
     }
   }
+
+  Future<AlertModel> resolveAlert(String id, {required String resolutionNote}) async {
+    try {
+      final res = await _api.patch('/alerts/$id', data: {
+        'status': 'resolved',
+        'resolution_note': resolutionNote,
+      });
+      return AlertModel.fromJson(res.data as Map<String, dynamic>);
+    } catch (e) {
+      throw ErrorHandlerService.handle(e);
+    }
+  }
 }

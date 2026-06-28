@@ -1,7 +1,24 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export type UserRole =
+  | 'center_head'
+  | 'therapist'
+  | 'lead_therapist'
+  | 'parent'
+  | 'dietician'
+  | 'clinical_psychologist';
+
+export const ALL_ROLES: UserRole[] = [
+  'center_head',
+  'therapist',
+  'lead_therapist',
+  'parent',
+  'dietician',
+  'clinical_psychologist',
+];
+
 export interface IUser extends Document {
-  role:          'center_head' | 'therapist' | 'parent';
+  role:          UserRole;
   phone:         string;
   email?:        string;
   password_hash: string;
@@ -14,7 +31,7 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    role:          { type: String, enum: ['center_head', 'therapist', 'parent'], required: true },
+    role:          { type: String, enum: ALL_ROLES, required: true },
     phone:         { type: String, required: true, unique: true, index: true, trim: true },
     email:         { type: String, sparse: true, lowercase: true, trim: true },
     password_hash: { type: String, required: true },

@@ -7,11 +7,18 @@ import '../../features/therapist/screens/therapist_home_screen.dart';
 import '../../features/parent/screens/parent_home_screen.dart';
 import '../../features/parent/screens/child_detail_screen.dart';
 import '../../features/parent/screens/raise_alert_screen.dart';
+import '../../features/parent/screens/chatbot_screen.dart';
 import '../../features/center_head/screens/center_head_home_screen.dart';
 import '../../features/center_head/screens/enrollment_wizard_screen.dart';
 import '../../features/center_head/screens/therapist_enrollment_wizard_screen.dart';
 import '../../features/center_head/screens/admin_child_report_screen.dart';
 import '../../features/center_head/screens/parent_enrollment_screen.dart';
+import '../../features/lead_therapist/screens/lead_therapist_home_screen.dart';
+import '../../features/dietician/screens/dietician_home_screen.dart';
+import '../../features/dietician/screens/dietician_child_profile_screen.dart';
+import '../../features/clinical_psychologist/screens/clinical_psychologist_home_screen.dart';
+import '../../features/center_head/screens/payments_screen.dart';
+import '../../features/center_head/screens/settings_screen.dart';
 import '../../data/models/child.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -28,10 +35,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (status == AuthStatus.authenticated && onLogin) {
         final role = authState.valueOrNull?.user?.role ?? '';
         return switch (role) {
-          'therapist'   => '/therapist',
-          'parent'      => '/parent',
-          'center_head' => '/center-head',
-          _             => '/login',
+          'therapist'              => '/therapist',
+          'parent'                 => '/parent',
+          'center_head'            => '/center-head',
+          'lead_therapist'         => '/lead-therapist',
+          'dietician'              => '/dietician',
+          'clinical_psychologist'  => '/clinical-psychologist',
+          _                        => '/login',
         };
       }
       return null;
@@ -59,24 +69,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          GoRoute(
+            path: 'chatbot',
+            builder: (ctx, _) => const ChatbotScreen(),
+          ),
         ],
       ),
+      GoRoute(path: '/lead-therapist', builder: (ctx, _) => const LeadTherapistHomeScreen()),
+      GoRoute(
+        path: '/dietician',
+        builder: (ctx, _) => const DieticianHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'child/:childId',
+            builder: (ctx, state) =>
+                DieticianChildProfileScreen(childId: state.pathParameters['childId']!),
+          ),
+        ],
+      ),
+      GoRoute(path: '/clinical-psychologist', builder: (ctx, _) => const ClinicalPsychologistHomeScreen()),
       GoRoute(
         path: '/center-head',
         builder: (ctx, _) => const CenterHeadHomeScreen(),
         routes: [
-          GoRoute(
-            path: 'enroll',
-            builder: (ctx, _) => const EnrollmentWizardScreen(),
-          ),
-          GoRoute(
-            path: 'enroll-therapist',
-            builder: (ctx, _) => const TherapistEnrollmentWizardScreen(),
-          ),
-          GoRoute(
-            path: 'enroll-parent',
-            builder: (ctx, _) => const ParentEnrollmentScreen(),
-          ),
+          GoRoute(path: 'enroll',           builder: (ctx, _) => const EnrollmentWizardScreen()),
+          GoRoute(path: 'enroll-therapist', builder: (ctx, _) => const TherapistEnrollmentWizardScreen()),
+          GoRoute(path: 'enroll-parent',    builder: (ctx, _) => const ParentEnrollmentScreen()),
+          GoRoute(path: 'payments',         builder: (ctx, _) => const PaymentsScreen()),
+          GoRoute(path: 'settings',         builder: (ctx, _) => const SettingsScreen()),
           GoRoute(
             path: 'child/:childId',
             builder: (ctx, state) {

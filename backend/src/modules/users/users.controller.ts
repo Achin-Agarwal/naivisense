@@ -5,6 +5,8 @@ import { asyncHandler }            from '../../utils/http';
 import { AppError }                from '../../middleware/error';
 import { EnrollTherapistSchema }   from './users.therapist-schema';
 import { EnrollParentSchema }      from './users.parent-schema';
+import { EnrollStaffSchema }       from './users.staff-schema';
+import { ALL_ROLES }               from '../../models/user.model';
 
 const UpdateMeSchema = z.object({
   name: z.string().min(2).max(100).trim().optional(),
@@ -54,10 +56,16 @@ export const uploadTherapistDocument = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+export const enrollStaff = asyncHandler(async (req, res) => {
+  const input  = EnrollStaffSchema.parse(req.body);
+  const result = await UsersService.enrollStaff(input, req.user!);
+  res.status(201).json(result);
+});
+
 export const listStaff = asyncHandler(async (req, res) => {
   const role = (req.query.role as string) ?? 'therapist';
-  if (!['therapist', 'parent'].includes(role)) {
-    throw new AppError('INVALID_INPUT', 'role must be therapist or parent');
+  if (!ALL_ROLES.includes(role as typeof ALL_ROLES[number])) {
+    throw new AppError('INVALID_INPUT', `role must be one of: ${ALL_ROLES.join(', ')}`);
   }
   const users = await UsersService.listByRole(role, req.user!);
   res.json(users);

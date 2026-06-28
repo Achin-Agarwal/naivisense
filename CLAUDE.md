@@ -64,3 +64,9 @@
 - Explain what changed and why at a high level; let code and tests carry the detail.
 - Report blockers with evidence and a concrete next action.
 - Final responses must summarize the implementation, verification performed, and any residual risk.
+
+## gstack
+
+- Use the `/browse` skill from gstack for all web browsing.
+- Never use `mcp__claude-in-chrome__*` tools.
+- Available gstack skills: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/connect-chrome`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/setup-gbrain`, `/retro`, `/investigate`, `/document-release`, `/document-generate`, `/codex`, `/cso`, `/autoplan`, `/plan-devex-review`, `/devex-review`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`.

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../data/models/alert.dart';
 import '../../../data/models/child.dart';
 import '../../../data/models/diet_plan.dart';
+import '../../../data/models/goal.dart';
 import '../../../data/models/home_plan.dart';
+import '../../../data/models/review.dart';
+import '../../../data/models/video_item.dart';
 import '../../../data/models/session.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -23,6 +27,9 @@ class ChildDetailScreen extends ConsumerWidget {
     final plan     = ref.watch(parentActivePlanProvider(child.id));
     final dietPlan = ref.watch(parentDietPlanProvider(child.id));
     final alerts   = ref.watch(parentAlertsProvider(child.id));
+    final goals    = ref.watch(parentGoalsProvider(child.id));
+    final reviews  = ref.watch(parentReviewsProvider(child.id));
+    final videos   = ref.watch(parentVideosProvider(child.id));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -32,6 +39,9 @@ class ChildDetailScreen extends ConsumerWidget {
           ref.invalidate(parentActivePlanProvider(child.id));
           ref.invalidate(parentDietPlanProvider(child.id));
           ref.invalidate(parentAlertsProvider(child.id));
+          ref.invalidate(parentGoalsProvider(child.id));
+          ref.invalidate(parentReviewsProvider(child.id));
+          ref.invalidate(parentVideosProvider(child.id));
         },
         child: CustomScrollView(
           slivers: [
@@ -55,6 +65,12 @@ class ChildDetailScreen extends ConsumerWidget {
                   _buildLastSessionNotes(context, sessions),
                   const SizedBox(height: 20),
                   _buildOpenAlerts(context, alerts),
+                  const SizedBox(height: 20),
+                  _buildAcceptedGoals(context, goals),
+                  const SizedBox(height: 20),
+                  _buildPublishedReviews(context, reviews),
+                  const SizedBox(height: 20),
+                  _buildImprovementVideos(context, videos),
                   const SizedBox(height: 20),
                   _buildRaiseAlert(context, ref),
                   const SizedBox(height: 32),
@@ -128,7 +144,7 @@ class ChildDetailScreen extends ConsumerWidget {
     final (severityLabel, severityColor) = switch (child.severity) {
       'mild'         => ('Mild', AppColors.mintGreen),
       'moderate'     => ('Moderate', AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _              => ('—', AppColors.textSecondary),
     };
     return Wrap(
@@ -479,7 +495,7 @@ class ChildDetailScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         dietPlan.when(
           loading: () => const LinearProgressIndicator(),
-          error:   (_, __) => const _EmptyHint(message: 'No active diet plan'),
+          error:   (_, _) => const _EmptyHint(message: 'No active diet plan'),
           data: (p) {
             if (p == null) {
               return const _EmptyHint(message: 'No diet plan assigned yet');
@@ -634,6 +650,189 @@ class ChildDetailScreen extends ConsumerWidget {
                 ),
               ),
             )),
+      ],
+    );
+  }
+
+  // ── Accepted Goals (read-only) ────────────────────────────────────────────
+  Widget _buildAcceptedGoals(BuildContext context,
+      AsyncValue<List<GoalModel>> goals) {
+    return goals.when(
+      loading: () => const SizedBox.shrink(),
+      error:   (_, _) => const SizedBox.shrink(),
+      data: (list) {
+        final accepted = list.where((g) => g.isAccepted || g.isCompleted).toList();
+        if (accepted.isEmpty) return const SizedBox.shrink();
+        return AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Therapy Goals',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+              ...accepted.map((g) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          g.isCompleted
+                              ? Icons.check_circle
+                              : Icons.radio_button_checked,
+                          size: 14,
+                          color: g.isCompleted
+                              ? AppColors.mintGreen
+                              : AppColors.primaryBlue,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(g.title,
+                              style: const TextStyle(fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Published Reviews (read-only) ─────────────────────────────────────────
+  Widget _buildPublishedReviews(BuildContext context,
+      AsyncValue<List<ReviewModel>> reviews) {
+    return reviews.when(
+      loading: () => const SizedBox.shrink(),
+      error:   (_, _) => const SizedBox.shrink(),
+      data: (list) {
+        final published = list.where((r) => r.isPublished).toList();
+        if (published.isEmpty) return const SizedBox.shrink();
+        return AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Progress Reviews',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 12),
+              ...published.take(3).map((r) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(r.typeLabel,
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
+                            const Spacer(),
+                            Text(
+                              '${r.periodStart.day}/${r.periodStart.month}/${r.periodStart.year}',
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(r.textObservations,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary)),
+                        if (r.adminNotes != null && r.adminNotes!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text('Note: ${r.adminNotes}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primaryBlue,
+                                    fontStyle: FontStyle.italic)),
+                          ),
+                        const Divider(height: 16),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Improvement Videos (parent_visible + upload) ─────────────────────────
+  Widget _buildImprovementVideos(BuildContext context,
+      AsyncValue<List<VideoItemModel>> videos) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _sectionHeader('Videos', Icons.videocam_outlined)),
+            _VideoUploadButton(childId: child.id),
+          ],
+        ),
+        const SizedBox(height: 12),
+        videos.when(
+          loading: () => const LinearProgressIndicator(),
+          error:   (_, _) => const _EmptyHint(message: 'Could not load videos'),
+          data: (list) {
+            if (list.isEmpty) {
+              return const _EmptyHint(message: 'No videos yet — upload an observation video');
+            }
+            return Column(
+              children: list.take(5).map((v) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.divider),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.play_circle_outline,
+                                color: AppColors.primaryBlue, size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(v.title,
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500)),
+                                Text(v.categoryLabel,
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )).toList(),
+            );
+          },
+        ),
       ],
     );
   }
@@ -937,6 +1136,75 @@ class _NoteRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Video upload button ───────────────────────────────────────────────────────
+
+class _VideoUploadButton extends ConsumerStatefulWidget {
+  final String childId;
+  const _VideoUploadButton({required this.childId});
+
+  @override
+  ConsumerState<_VideoUploadButton> createState() => _VideoUploadButtonState();
+}
+
+class _VideoUploadButtonState extends ConsumerState<_VideoUploadButton> {
+  final _picker = ImagePicker();
+
+  Future<void> _upload() async {
+    final titleCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Upload Observation Video'),
+        content: TextField(
+          controller: titleCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Video title',
+            hintText: 'e.g. Morning activity observation',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Choose Video')),
+        ],
+      ),
+    );
+
+    if (confirmed != true || titleCtrl.text.trim().isEmpty) return;
+
+    final picked = await _picker.pickVideo(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    final ok = await ref.read(videoUploadProvider.notifier).upload(
+      childId:  widget.childId,
+      title:    titleCtrl.text.trim(),
+      filePath: picked.path,
+      mimeType: 'video/mp4',
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok ? 'Video uploaded successfully' : 'Upload failed'),
+          backgroundColor: ok ? AppColors.mintGreen : AppColors.softCoral,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(videoUploadProvider);
+    return TextButton.icon(
+      onPressed: state.loading ? null : _upload,
+      icon: state.loading
+          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+          : const Icon(Icons.upload_outlined, size: 16),
+      label: const Text('Upload'),
+      style: TextButton.styleFrom(foregroundColor: AppColors.primaryBlue),
     );
   }
 }

@@ -341,14 +341,14 @@ AWS_SECRET_ACCESS_KEY=
 AI_SERVICE_URL=http://localhost:8001
 AI_SERVICE_TOKEN=<shared secret>
 
-ALLOWED_ORIGIN=*
+ALLOWED_ORIGIN=https://app.naivisense.com
 ```
 
 ### AI Service (`backend/ai-service/.env`)
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
-VOYAGE_API_KEY=pa-...
+ANTHROPIC_API_KEY=<anthropic-api-key>
+VOYAGE_API_KEY=<voyage-api-key>
 MONGO_URL=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/naivisense
 AI_SERVICE_TOKEN=<same shared secret as backend>
 PORT=8001

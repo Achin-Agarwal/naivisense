@@ -376,7 +376,7 @@ class _EnrollmentWizardScreenState
           error: (e, _) => Text('Failed to load parents: $e',
               style: const TextStyle(color: AppColors.softCoral)),
           data: (list) => DropdownButtonFormField<String>(
-            value: _parentId,
+            initialValue: _parentId,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.family_restroom_outlined),
             ),
@@ -416,19 +416,19 @@ class _EnrollmentWizardScreenState
         _label('Severity Level *'),
         const SizedBox(height: 8),
         _chipGroup(
-          options: const ['mild', 'moderate', 'high_support'],
+          options: const ['mild', 'moderate', 'severe'],
           selected: {_severity},
           single: true,
           onTap: (v) => setState(() => _severity = v),
           display: (v) => switch (v) {
             'mild' => 'Mild',
             'moderate' => 'Moderate',
-            _ => 'High Support',
+            _ => 'Severe',
           },
           colors: {
             'mild': AppColors.mintGreen,
             'moderate': AppColors.warmYellow,
-            'high_support': AppColors.softCoral,
+            'severe': AppColors.softCoral,
           },
         ),
         const SizedBox(height: 20),
@@ -753,7 +753,7 @@ class _EnrollmentWizardScreenState
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _therapistAssignments[target],
+                              initialValue: _therapistAssignments[target],
                               decoration: const InputDecoration(
                                 contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 10),
@@ -874,7 +874,7 @@ class _EnrollmentWizardScreenState
     return SwitchListTile(
       value: value,
       title: Text(label, style: const TextStyle(fontSize: 14)),
-      activeColor: AppColors.primaryBlue,
+      activeThumbColor: AppColors.primaryBlue,
       contentPadding: EdgeInsets.zero,
       onChanged: onChanged,
     );
@@ -1061,7 +1061,9 @@ class _EnrollmentWizardScreenState
     final now = DateTime.now();
     int years = now.year - dob.year;
     if (now.month < dob.month ||
-        (now.month == dob.month && now.day < dob.day)) years--;
+        (now.month == dob.month && now.day < dob.day)) {
+      years--;
+    }
     return years;
   }
 

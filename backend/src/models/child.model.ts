@@ -13,7 +13,7 @@ export interface IChild extends Document {
   gender:           'boy' | 'girl' | 'other';
   photo_url?:       string;
   diagnosis:        string[];
-  severity:         'mild' | 'moderate' | 'high_support';
+  severity:         'mild' | 'moderate' | 'severe';
   primary_concerns: string[];
   therapy_targets:  string[];
   therapists:       { therapist_id: mongoose.Types.ObjectId; therapy_type: string; schedule?: ISessionSchedule }[];
@@ -35,6 +35,8 @@ export interface IChild extends Document {
     parent_involvement: string;
   };
   goals: { priorities: string[]; timeline_months: number };
+  enrollment_mode?:  'online' | 'offline' | 'hybrid';
+  parent_email?:     string;
   consent_record: { given_at: Date; given_by: string };
   functional_baseline: {
     communication_level: string;
@@ -61,7 +63,7 @@ const childSchema = new Schema<IChild>(
     gender:           { type: String, enum: ['boy', 'girl', 'other'], required: true },
     photo_url:        { type: String },
     diagnosis:        [{ type: String }],
-    severity:         { type: String, enum: ['mild', 'moderate', 'high_support'] },
+    severity:         { type: String, enum: ['mild', 'moderate', 'severe'] },
     primary_concerns: [{ type: String }],
     therapy_targets:  [{ type: String }],
     therapists: [{
@@ -98,6 +100,8 @@ const childSchema = new Schema<IChild>(
       priorities:      [{ type: String }],
       timeline_months: { type: Number, default: 6 },
     },
+    enrollment_mode:  { type: String, enum: ['online', 'offline', 'hybrid'], default: 'offline' },
+    parent_email:     { type: String },
     consent_record: { given_at: Date, given_by: String },
     functional_baseline: {
       communication_level: { type: String, enum: ['non_verbal', 'single_words', 'phrases', 'sentences'], default: 'non_verbal' },

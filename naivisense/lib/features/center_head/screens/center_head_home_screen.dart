@@ -10,6 +10,8 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/stat_tile.dart';
 import '../../../shared/widgets/state_widgets.dart' as sw;
 import '../providers/center_head_provider.dart';
+import 'payments_screen.dart';
+import 'settings_screen.dart';
 
 String _shortIdOrFallback(String id, String fallback) {
   if (id.isEmpty) return fallback;
@@ -33,6 +35,22 @@ class CenterHeadHomeScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.payments_outlined),
+            tooltip: 'Payments',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PaymentsScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authProvider.notifier).logout(),
@@ -206,7 +224,7 @@ class CenterHeadHomeScreen extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: list.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (_, i) => _ParentAdminCard(parent: list[i]),
             );
           },
@@ -452,7 +470,7 @@ class _AssignedChildRow extends StatelessWidget {
     final (sevLabel, sevColor) = switch (child.severity) {
       'mild' => ('Mild', AppColors.mintGreen),
       'moderate' => ('Moderate', AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _ => ('—', AppColors.textSecondary),
     };
 
@@ -522,7 +540,7 @@ class _ChildAdminCard extends StatelessWidget {
     final (sevLabel, sevColor) = switch (child.severity) {
       'mild' => ('Mild', AppColors.mintGreen),
       'moderate' => ('Moderate', AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _ => ('—', AppColors.textSecondary),
     };
 

@@ -11,18 +11,30 @@ export interface ISessionNotes {
   what_didnt_work?:    string;
   homework?:           string;
   notes?:              string;
+  // Extended therapist observation fields
+  observations?:       string;
+  progress_log?:       string;
+  tantrums_observed?:  string;
+  resolution_notes?:   string;
+  follow_up_required:  boolean;
   submitted_at:        Date;
 }
 
 export interface ISession extends Document {
-  child_id:     mongoose.Types.ObjectId;
-  therapist_id: mongoose.Types.ObjectId;
-  scheduled_at: Date;
-  type:         'speech' | 'ot' | 'behavior' | 'special_ed';
-  mode:         'online' | 'offline';
-  duration_min: number;
-  status:       'scheduled' | 'completed' | 'cancelled';
-  notes?:       ISessionNotes;
+  child_id:           mongoose.Types.ObjectId;
+  therapist_id:       mongoose.Types.ObjectId;
+  scheduled_at:       Date;
+  type:               'speech' | 'ot' | 'behavior' | 'special_ed';
+  mode:               'online' | 'offline';
+  duration_min:       number;
+  status:             'scheduled' | 'completed' | 'cancelled';
+  meeting_link?:      string;
+  calendar_event_id?: string;
+  calendar_provider?: 'google' | 'manual';
+  calendar_synced_at?: Date;
+  attendance_source?: 'google_meet' | 'manual' | 'geo';
+  offline_location?:  string;
+  notes?:             ISessionNotes;
 }
 
 const sessionNotesSchema = new Schema<ISessionNotes>(
@@ -37,6 +49,11 @@ const sessionNotesSchema = new Schema<ISessionNotes>(
     what_didnt_work:     { type: String },
     homework:            { type: String },
     notes:               { type: String },
+    observations:        { type: String },
+    progress_log:        { type: String },
+    tantrums_observed:   { type: String },
+    resolution_notes:    { type: String },
+    follow_up_required:  { type: Boolean, default: false },
     submitted_at:        { type: Date, default: Date.now },
   },
   { _id: false },
@@ -51,7 +68,13 @@ const sessionSchema = new Schema<ISession>(
     mode:         { type: String, enum: ['online', 'offline'], default: 'offline' },
     duration_min: { type: Number, default: 45 },
     status:       { type: String, enum: ['scheduled', 'completed', 'cancelled'], default: 'scheduled' },
-    notes:        { type: sessionNotesSchema },
+    meeting_link:       { type: String },
+    calendar_event_id:  { type: String },
+    calendar_provider:  { type: String, enum: ['google', 'manual'] },
+    calendar_synced_at: { type: Date },
+    attendance_source:  { type: String, enum: ['google_meet', 'manual', 'geo'] },
+    offline_location:   { type: String },
+    notes:              { type: sessionNotesSchema },
   },
   { timestamps: true },
 );

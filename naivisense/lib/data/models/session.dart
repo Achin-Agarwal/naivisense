@@ -8,6 +8,11 @@ class SessionNotes {
   final String? whatWorked;
   final String? whatDidntWork;
   final String? homework;
+  final String? observations;
+  final String? progressLog;
+  final String? tantrums;
+  final String? resolutionNotes;
+  final bool followUpRequired;
 
   const SessionNotes({
     required this.mood,
@@ -19,6 +24,11 @@ class SessionNotes {
     this.whatWorked,
     this.whatDidntWork,
     this.homework,
+    this.observations,
+    this.progressLog,
+    this.tantrums,
+    this.resolutionNotes,
+    this.followUpRequired = false,
   });
 
   factory SessionNotes.fromJson(Map<String, dynamic> j) => SessionNotes(
@@ -32,6 +42,11 @@ class SessionNotes {
         whatWorked:           j['what_worked'] as String?,
         whatDidntWork:        j['what_didnt_work'] as String?,
         homework:             j['homework'] as String?,
+        observations:         j['observations'] as String?,
+        progressLog:          j['progress_log'] as String?,
+        tantrums:             j['tantrums_observed'] as String?,
+        resolutionNotes:      j['resolution_notes'] as String?,
+        followUpRequired:     j['follow_up_required'] as bool? ?? false,
       );
 }
 
@@ -42,8 +57,9 @@ class SessionModel {
   final DateTime scheduledAt;
   final int durationMin;
   final String type;   // speech | ot | behavior | special_ed
-  final String mode;   // online | offline
-  final String status; // scheduled | completed | cancelled
+  final String mode;         // online | offline
+  final String status;       // scheduled | completed | cancelled
+  final String? meetingLink;
   final SessionNotes? notes;
 
   const SessionModel({
@@ -55,6 +71,7 @@ class SessionModel {
     required this.type,
     required this.mode,
     required this.status,
+    this.meetingLink,
     this.notes,
   });
 
@@ -73,6 +90,7 @@ class SessionModel {
       type:        j['type'] as String? ?? 'speech',
       mode:        j['mode'] as String? ?? 'offline',
       status:      j['status'] as String? ?? 'scheduled',
+      meetingLink: j['meeting_link'] as String?,
       notes:       notesJson != null ? SessionNotes.fromJson(notesJson) : null,
     );
   }

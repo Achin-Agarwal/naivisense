@@ -50,4 +50,14 @@ class SessionsRepository {
       throw ErrorHandlerService.handle(e);
     }
   }
+
+  Future<SessionModel?> getNextSession({required String childId}) async {
+    try {
+      final res = await _api.get('/sessions/next', params: {'childId': childId});
+      if (res.data == null) return null;
+      return SessionModel.fromJson(res.data as Map<String, dynamic>);
+    } catch (e) {
+      throw ErrorHandlerService.handle(e);
+    }
+  }
 }

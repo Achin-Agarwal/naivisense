@@ -12,6 +12,8 @@
 credentials
 credentials.md
 .env
+.env.local
+.env.*.local
 
 # Claude Code local permissions (project agents remain shareable)
 .claude/settings.local.json
@@ -21,6 +23,7 @@ backend/node_modules/
 backend/dist/
 backend/.env
 backend/.env.*
+!backend/.env.example
 backend/uploads/
 backend/*.log
 

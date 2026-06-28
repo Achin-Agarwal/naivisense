@@ -4,7 +4,7 @@ import { env }                              from '../config/env';
 
 export interface AuthPayload {
   sub:  string;
-  role: 'center_head' | 'therapist' | 'parent';
+  role: 'center_head' | 'therapist' | 'lead_therapist' | 'parent' | 'dietician' | 'clinical_psychologist';
   iat:  number;
   exp:  number;
 }

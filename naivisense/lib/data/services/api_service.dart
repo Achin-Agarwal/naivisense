@@ -24,6 +24,9 @@ class ApiService {
   Future<Response<T>> post<T>(String path, {dynamic data}) =>
       _dio.post<T>(path, data: data);
 
+  Future<Response<T>> put<T>(String path, {dynamic data}) =>
+      _dio.put<T>(path, data: data);
+
   Future<Response<T>> patch<T>(String path, {dynamic data}) =>
       _dio.patch<T>(path, data: data);
 

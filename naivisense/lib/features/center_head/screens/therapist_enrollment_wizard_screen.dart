@@ -734,7 +734,9 @@ class _TherapistEnrollmentWizardScreenState
     final now = DateTime.now();
     int years = now.year - dob.year;
     if (now.month < dob.month ||
-        (now.month == dob.month && now.day < dob.day)) years--;
+        (now.month == dob.month && now.day < dob.day)) {
+      years--;
+    }
     return years;
   }
 }

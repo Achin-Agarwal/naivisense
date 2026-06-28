@@ -7,8 +7,8 @@ import type { AuthPayload }  from '../../middleware/auth';
 import type { CreateDietPlanInput } from './diet-plans.schema';
 
 export async function createDietPlan(input: CreateDietPlanInput, user: AuthPayload) {
-  if (user.role !== 'therapist') {
-    throw new AppError('FORBIDDEN', 'Only therapists can create diet plans');
+  if (user.role !== 'therapist' && user.role !== 'dietician' && user.role !== 'center_head') {
+    throw new AppError('FORBIDDEN', 'Only therapists, dieticians, and center head can create diet plans');
   }
   return DietPlanModel.create({
     ...input,
@@ -24,6 +24,7 @@ export async function getActivePlan(childId: string, user: AuthPayload) {
 
   const canAccess =
     user.role === 'center_head' ||
+    user.role === 'dietician'   ||
     (user.role === 'therapist' && (child.therapists ?? []).some((t) => String(t.therapist_id) === user.sub)) ||
     (user.role === 'parent'    && String(child.parent_id)    === user.sub);
 

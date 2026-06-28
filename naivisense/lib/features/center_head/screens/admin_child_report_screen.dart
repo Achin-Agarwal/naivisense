@@ -696,7 +696,7 @@ class AdminChildReportScreen extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sorted.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (_, i) => _SessionHistoryCard(session: sorted[i]),
             );
           },
@@ -729,7 +729,7 @@ class AdminChildReportScreen extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sorted.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (_, i) => _AlertHistoryCard(alert: sorted[i]),
             );
           },
@@ -1423,7 +1423,7 @@ class _SeverityBadge extends StatelessWidget {
     final (label, color) = switch (severity) {
       'mild' => ('Mild', AppColors.mintGreen),
       'moderate' => ('Moderate', AppColors.warmYellow),
-      'high_support' => ('High Support', AppColors.softCoral),
+      'severe' => ('Severe', AppColors.softCoral),
       _ => ('—', Colors.white70),
     };
     return Container(

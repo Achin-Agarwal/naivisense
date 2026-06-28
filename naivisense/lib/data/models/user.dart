@@ -2,7 +2,8 @@ class UserModel {
   final String id;
   final String name;
   final String phone;
-  final String role; // center_head | therapist | parent
+  // center_head | therapist | lead_therapist | parent | dietician | clinical_psychologist
+  final String role;
   final String? centerId;
   final bool isActive;
 

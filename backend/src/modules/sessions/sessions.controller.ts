@@ -28,3 +28,12 @@ export const list = asyncHandler(async (req, res) => {
   const sessions = await SessionService.listSessions(childId, req.user!);
   res.json(sessions);
 });
+
+export const nextSession = asyncHandler(async (req, res) => {
+  const { childId } = req.query;
+  if (!childId || typeof childId !== 'string') {
+    throw new AppError('INVALID_INPUT', 'childId query param is required');
+  }
+  const session = await SessionService.getNextSession(childId, req.user!);
+  res.json(session);
+});
