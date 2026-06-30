@@ -3,8 +3,9 @@ class AppConstants {
 
   // API — swap to prod URL before release
   // static const String baseUrl = 'http://10.0.2.2:8000/api/v1'; // Android emulator
-  static const String baseUrl = 'http://localhost:8000/api/v1'; // iOS simulator / macOS
+  // static const String baseUrl = 'http://localhost:8000/api/v1'; // iOS simulator / macOS
   // static const String baseUrl = 'https://api.naivisense.in/api/v1'; // production
+  static const String baseUrl = 'http://192.168.1.4:8000/api/v1';
 
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 30);

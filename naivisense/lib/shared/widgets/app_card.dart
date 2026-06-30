@@ -16,13 +16,28 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+
     return Card(
       color: color,
       child: GestureDetector(
         onTap: onTap,
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : screenWidth;
+            final defaultPadding = (availableWidth * 0.04).clamp(12.0, 16.0);
+
+            return Padding(
+              padding: padding ?? EdgeInsets.all(defaultPadding),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: availableWidth),
+                child: child,
+              ),
+            );
+          },
         ),
       ),
     );

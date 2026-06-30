@@ -12,10 +12,12 @@ class ChatbotScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
-  final _controller    = TextEditingController();
-  final _scrollCtrl    = ScrollController();
+  final _controller = TextEditingController();
+  final _scrollCtrl = ScrollController();
+
   String? _threadId;
   final List<ChatMessageModel> _messages = [];
+
   bool _sending = false;
 
   @override
@@ -25,14 +27,26 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   }
 
   Future<void> _init() async {
-    final thread = await ref.read(chatbotRepositoryProvider).getOrCreateThread();
+    final thread = await ref
+        .read(chatbotRepositoryProvider)
+        .getOrCreateThread();
+
     if (!mounted) return;
+
     setState(() => _threadId = thread.id);
-    final msgs = await ref.read(chatbotRepositoryProvider).getMessages(thread.id);
+
+    final msgs = await ref
+        .read(chatbotRepositoryProvider)
+        .getMessages(thread.id);
+
     if (!mounted) return;
-    setState(() => _messages
-      ..clear()
-      ..addAll(msgs));
+
+    setState(() {
+      _messages
+        ..clear()
+        ..addAll(msgs);
+    });
+
     _scrollToBottom();
   }
 
@@ -50,35 +64,49 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Future<void> _send() async {
     final text = _controller.text.trim();
+
     if (text.isEmpty || _threadId == null || _sending) return;
+
     _controller.clear();
 
     final userMsg = ChatMessageModel(
-      id:        '',
-      threadId:  _threadId!,
-      role:      'user',
-      content:   text,
+      id: '',
+      threadId: _threadId!,
+      role: 'user',
+      content: text,
       createdAt: DateTime.now(),
     );
+
     setState(() {
       _messages.add(userMsg);
       _sending = true;
     });
+
     _scrollToBottom();
 
     try {
-      final reply = await ref.read(chatbotRepositoryProvider).sendMessage(_threadId!, text);
+      final reply = await ref
+          .read(chatbotRepositoryProvider)
+          .sendMessage(_threadId!, text);
+
       if (!mounted) return;
+
       setState(() {
         _messages.add(reply);
         _sending = false;
       });
+
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
+
       setState(() => _sending = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.softCoral),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.softCoral,
+        ),
       );
     }
   }
@@ -87,95 +115,181 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   void dispose() {
     _controller.dispose();
     _scrollCtrl.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('NaiviSense AI',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-        backgroundColor: AppColors.parentGradient.colors.last,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive breakpoints
+        final isMobile = constraints.maxWidth < 600;
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+        final isDesktop = constraints.maxWidth >= 1024;
+
+        // Responsive values
+        final titleFontSize = isMobile ? 18.0 : 20.0;
+        final badgeFontSize = isMobile ? 11.0 : 12.0;
+        final horizontalPadding = isMobile ? 16.0 : 24.0;
+
+        Widget chatBody = Column(
+          children: [
+            if (_threadId == null)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else
+              Expanded(
+                child: _messages.isEmpty && !_sending
+                    ? _buildWelcome(isMobile: isMobile)
+                    : ListView.builder(
+                        controller: _scrollCtrl,
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          16,
+                          horizontalPadding,
+                          8,
+                        ),
+                        itemCount: _messages.length + (_sending ? 1 : 0),
+                        itemBuilder: (_, i) {
+                          if (_sending && i == _messages.length) {
+                            return const _TypingBubble();
+                          }
+
+                          return _MessageBubble(message: _messages[i]);
+                        },
+                      ),
               ),
-              child: const Text('AI Chat',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
+
+            _buildInput(isMobile: isMobile),
+          ],
+        );
+
+        // Center content on tablet and desktop
+        if (!isMobile) {
+          chatBody = Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: chatBody,
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (_threadId == null)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            Expanded(
-              child: _messages.isEmpty && !_sending
-                  ? _buildWelcome()
-                  : ListView.builder(
-                      controller:   _scrollCtrl,
-                      padding:      const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      itemCount:    _messages.length + (_sending ? 1 : 0),
-                      itemBuilder:  (_, i) {
-                        if (_sending && i == _messages.length) {
-                          return _TypingBubble();
-                        }
-                        return _MessageBubble(message: _messages[i]);
-                      },
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+
+          // Prevent keyboard overflow
+          resizeToAvoidBottomInset: true,
+
+          appBar: AppBar(
+            title: Text(
+              'NaiviSense AI',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: titleFontSize,
+              ),
+            ),
+            backgroundColor: AppColors.parentGradient.colors.last,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: isMobile ? 12 : 16),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 10 : 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'AI Chat',
+                    style: TextStyle(
+                      fontSize: badgeFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
-            ),
-          _buildInput(),
-        ],
-      ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          body: SafeArea(child: chatBody),
+        );
+      },
     );
   }
 
-  Widget _buildWelcome() {
+  Widget _buildWelcome({required bool isMobile}) {
+    final iconSize = isMobile ? 40.0 : 50.0;
+    final titleSize = isMobile ? 20.0 : 24.0;
+    final descSize = isMobile ? 14.0 : 15.0;
+    final padding = isMobile ? 32.0 : 48.0;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
+        padding: EdgeInsets.all(padding),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(isMobile ? 20 : 24),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  size: iconSize,
+                  color: AppColors.primaryBlue,
+                ),
               ),
-              child: const Icon(Icons.auto_awesome, size: 40, color: AppColors.primaryBlue),
-            ),
-            const SizedBox(height: 20),
-            const Text('Hello! I\'m NaiviSense AI',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            const Text(
-              'Ask me anything about your child\'s therapy, home activities, diet, or general guidance.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+
+              Text(
+                'Hello! I\'m NaiviSense AI',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: titleSize,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Ask me anything about your child\'s therapy, home activities, diet, or general guidance.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: descSize,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInput() {
+  Widget _buildInput({required bool isMobile}) {
+    final sendButtonSize = isMobile ? 44.0 : 48.0;
+    final iconSize = isMobile ? 20.0 : 22.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        8,
+        isMobile ? 16 : 24,
+        16,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.divider)),
@@ -187,34 +301,46 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             Expanded(
               child: TextField(
                 controller: _controller,
-                maxLines:   4,
-                minLines:   1,
+                maxLines: 4,
+                minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.send,
                 decoration: InputDecoration(
-                  hintText:        'Ask something...',
-                  hintStyle:       const TextStyle(color: AppColors.textSecondary),
-                  filled:          true,
-                  fillColor:       AppColors.background,
-                  border:          OutlineInputBorder(
+                  hintText: 'Ask something...',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(22),
-                    borderSide:   BorderSide.none,
+                    borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 18,
+                    vertical: isMobile ? 10 : 12,
+                  ),
                 ),
                 onSubmitted: (_) => _send(),
               ),
             ),
+
             const SizedBox(width: 8),
+
             GestureDetector(
               onTap: _sending ? null : _send,
               child: Container(
-                width: 44,
-                height: 44,
+                width: sendButtonSize,
+                height: sendButtonSize,
                 decoration: BoxDecoration(
-                  color: _sending ? AppColors.textSecondary : AppColors.primaryBlue,
+                  color: _sending
+                      ? AppColors.textSecondary
+                      : AppColors.primaryBlue,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                child: Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
               ),
             ),
           ],
@@ -226,37 +352,71 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessageModel message;
+
   const _MessageBubble({required this.message});
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive breakpoints
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1024;
+
+    // Responsive bubble widths
+    final maxBubbleWidth = isMobile
+        ? screenWidth * 0.78
+        : isTablet
+        ? screenWidth * 0.65
+        : 600.0;
+
+    // Responsive spacing
+    final horizontalPadding = isMobile ? 14.0 : 16.0;
+    final verticalPadding = isMobile ? 10.0 : 12.0;
+    final marginBottom = isMobile ? 12.0 : 16.0;
+    final textFontSize = isMobile ? 14.0 : 15.0;
+
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        margin: EdgeInsets.only(bottom: marginBottom),
+
+        constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+
         decoration: BoxDecoration(
-          color: isUser
-              ? AppColors.primaryBlue
-              : AppColors.surface,
+          color: isUser ? AppColors.primaryBlue : AppColors.surface,
+
           borderRadius: BorderRadius.only(
-            topLeft:     const Radius.circular(18),
-            topRight:    const Radius.circular(18),
-            bottomLeft:  isUser ? const Radius.circular(18) : const Radius.circular(4),
-            bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(18),
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+
+            bottomLeft: isUser
+                ? const Radius.circular(18)
+                : const Radius.circular(4),
+
+            bottomRight: isUser
+                ? const Radius.circular(4)
+                : const Radius.circular(18),
           ),
+
           border: isUser ? null : Border.all(color: AppColors.divider),
         ),
-        child: Text(
+
+        child: SelectableText(
           message.content,
+
           style: TextStyle(
-            fontSize: 14,
-            height:   1.5,
-            color:    isUser ? Colors.white : AppColors.textPrimary,
+            fontSize: textFontSize,
+            height: 1.5,
+            color: isUser ? Colors.white : AppColors.textPrimary,
           ),
         ),
       ),
@@ -265,32 +425,60 @@ class _MessageBubble extends StatelessWidget {
 }
 
 class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive breakpoints
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1024;
+
+    // Responsive sizing
+    final horizontalPadding = isMobile ? 14.0 : 16.0;
+    final verticalPadding = isMobile ? 12.0 : 14.0;
+    final marginBottom = isMobile ? 12.0 : 16.0;
+    final dotSpacing = isMobile ? 4.0 : 6.0;
+
+    // Match message bubble width behavior
+    final maxBubbleWidth = isMobile
+        ? screenWidth * 0.78
+        : isTablet
+        ? screenWidth * 0.65
+        : 600.0;
+
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color:  AppColors.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft:     Radius.circular(18),
-            topRight:    Radius.circular(18),
-            bottomRight: Radius.circular(18),
-            bottomLeft:  Radius.circular(4),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+        child: Container(
+          margin: EdgeInsets.only(bottom: marginBottom),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
           ),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _Dot(delay: 0),
-            const SizedBox(width: 4),
-            _Dot(delay: 150),
-            const SizedBox(width: 4),
-            _Dot(delay: 300),
-          ],
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+              bottomLeft: Radius.circular(4),
+            ),
+            border: Border.all(color: AppColors.divider),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _Dot(delay: 0),
+              SizedBox(width: dotSpacing),
+              const _Dot(delay: 150),
+              SizedBox(width: dotSpacing),
+              const _Dot(delay: 300),
+            ],
+          ),
         ),
       ),
     );
@@ -299,6 +487,7 @@ class _TypingBubble extends StatelessWidget {
 
 class _Dot extends StatefulWidget {
   final int delay;
+
   const _Dot({required this.delay});
 
   @override
@@ -306,19 +495,24 @@ class _Dot extends StatefulWidget {
 }
 
 class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
+
     _ctrl = AnimationController(
-      vsync:    this,
+      vsync: this,
       duration: const Duration(milliseconds: 600),
     );
+
     Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _ctrl.repeat(reverse: true);
+      if (mounted) {
+        _ctrl.repeat(reverse: true);
+      }
     });
+
     _anim = Tween<double>(begin: 0.3, end: 1.0).animate(_ctrl);
   }
 
@@ -329,16 +523,27 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _anim,
-        builder: (_, _) => Opacity(
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive dot size
+    final dotSize = screenWidth < 600 ? 8.0 : 10.0;
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) {
+        return Opacity(
           opacity: _anim.value,
           child: Container(
-            width: 8, height: 8,
+            width: dotSize,
+            height: dotSize,
             decoration: const BoxDecoration(
-              color: AppColors.textSecondary, shape: BoxShape.circle,
+              color: AppColors.textSecondary,
+              shape: BoxShape.circle,
             ),
           ),
-        ),
-      );
+        );
+      },
+    );
+  }
 }
