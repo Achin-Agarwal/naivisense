@@ -23,6 +23,13 @@ export const EnrollTherapistSchema = z.object({
   session_modes:       z.array(z.string()).default([]),
   session_duration:    z.number().min(15).max(120).default(45),
   identity_proof_type: z.enum(['aadhar', 'pan', 'passport', 'driving_license']).optional(),
+  mail_credentials: z.object({
+  smtp_email: z.string().email(),
+
+  smtp_password: z.string().min(8),
+
+  provider: z.enum(['gmail', 'outlook']).default('gmail'),
+}),
 });
 
 export type EnrollTherapistInput = z.infer<typeof EnrollTherapistSchema>;

@@ -4,6 +4,7 @@ import { uploadToCloudinary }      from '../../config/cloudinary';
 import { asyncHandler }            from '../../utils/http';
 import { AppError }                from '../../middleware/error';
 import { EnrollTherapistSchema }   from './users.therapist-schema';
+import { EnrollCenterHeadSchema } from './users.center-head-schema';
 import { EnrollParentSchema }      from './users.parent-schema';
 import { EnrollStaffSchema }       from './users.staff-schema';
 import { ALL_ROLES }               from '../../models/user.model';
@@ -31,6 +32,12 @@ export const getTherapistsOverview = asyncHandler(async (req, res) => {
 export const enrollTherapist = asyncHandler(async (req, res) => {
   const input = EnrollTherapistSchema.parse(req.body);
   const result = await UsersService.enrollTherapist(input, req.user!);
+  res.status(201).json(result);
+});
+
+export const enrollCenterHead = asyncHandler(async (req, res) => {
+  const input = EnrollCenterHeadSchema.parse(req.body);
+  const result = await UsersService.enrollCenterHead(input);
   res.status(201).json(result);
 });
 

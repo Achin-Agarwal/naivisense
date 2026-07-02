@@ -5,6 +5,7 @@ import { uploadRateLimit } from '../../middleware/rate-limit';
 import * as UsersCtrl  from './users.controller';
 
 const router = Router();
+router.post('/center-heads',                      UsersCtrl.enrollCenterHead);
 router.use(requireAuth);
 
 router.get('/therapists-overview',                UsersCtrl.getTherapistsOverview);             // center_head only

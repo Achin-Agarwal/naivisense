@@ -19,6 +19,11 @@ export interface ITherapistProfile extends Document {
   degree_certificate_url?:  string;
   identity_proof_url?:      string;
   identity_proof_type?:     'aadhar' | 'pan' | 'passport' | 'driving_license';
+  mail_credentials?: {
+    smtp_email: string;
+    encrypted_password: string;
+    provider: 'gmail' | 'outlook';
+};
 }
 
 const therapistProfileSchema = new Schema<ITherapistProfile>({
@@ -40,6 +45,21 @@ const therapistProfileSchema = new Schema<ITherapistProfile>({
   degree_certificate_url:   { type: String },
   identity_proof_url:       { type: String },
   identity_proof_type:      { type: String, enum: ['aadhar', 'pan', 'passport', 'driving_license'] },
+  mail_credentials: {
+  smtp_email: {
+    type: String,
+  },
+
+  encrypted_password: {
+    type: String,
+  },
+
+  provider: {
+    type: String,
+    enum: ['gmail', 'outlook'],
+    default: 'gmail',
+  },
+},
 });
 
 export const TherapistProfileModel = mongoose.model<ITherapistProfile>(

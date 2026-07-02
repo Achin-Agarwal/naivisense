@@ -17,6 +17,15 @@ export interface CalendarEventResult {
   calendar_provider: 'google' | 'manual';
 }
 
+export interface UpdateCalendarEventPayload {
+  eventId: string;
+  scheduledAt: Date | string;
+  durationMin: number;
+  childName: string;
+  parentEmail?: string;
+  therapistEmail?: string;
+}
+
 type CalendarClient = ReturnType<typeof google.calendar>;
 type MeetClient = ReturnType<typeof google.meet>;
 
@@ -156,3 +165,91 @@ export async function fetchMeetAttendance(meetingLink: string, scheduledAt: Date
     participantNames,
   };
 }
+
+export async function updateCalendarEvent(
+  payload: UpdateCalendarEventPayload
+): Promise<CalendarEventResult> {
+
+  const calendar = getCalendarClient();
+
+  if (!calendar) {
+    throw new AppError(
+      "SERVICE_UNAVAILABLE",
+      "Google Calendar is not configured"
+    );
+  }
+
+  const scheduledAt = new Date(payload.scheduledAt);
+
+  const endAt = new Date(
+    scheduledAt.getTime() +
+    payload.durationMin * 60_000
+  );
+
+  const attendees = [
+    payload.parentEmail,
+    payload.therapistEmail,
+  ]
+    .filter((email): email is string => Boolean(email))
+    .map((email) => ({ email }));
+
+  const updatedEvent = await calendar.events.update({
+
+    calendarId: env.GOOGLE_CALENDAR_ID,
+
+    eventId: payload.eventId,
+
+    sendUpdates: "all",
+
+    requestBody: {
+
+      summary: `NaiviSense session - ${payload.childName}`,
+
+      description: "Therapy session updated from NaiviSense.",
+
+      start: {
+        dateTime: scheduledAt.toISOString(),
+      },
+
+      end: {
+        dateTime: endAt.toISOString(),
+      },
+
+      attendees,
+    },
+  });
+
+  return {
+
+    calendar_event_id:
+      updatedEvent.data.id ?? payload.eventId,
+
+    meeting_link:
+      eventMeetingLink(updatedEvent.data) ?? "",
+
+    calendar_provider: "google",
+  };
+}
+
+export async function deleteCalendarEvent(
+  eventId: string
+): Promise<void> {
+
+  const calendar = getCalendarClient();
+
+  if (!calendar) {
+    throw new AppError(
+      "SERVICE_UNAVAILABLE",
+      "Google Calendar is not configured"
+    );
+  }
+
+  await calendar.events.delete({
+    calendarId: env.GOOGLE_CALENDAR_ID,
+    eventId,
+    sendUpdates: "all",
+  });
+
+}
+
+

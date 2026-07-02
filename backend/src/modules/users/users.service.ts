@@ -1,13 +1,16 @@
 import bcrypt                    from 'bcrypt';
 import { UserModel }             from '../../models/user.model';
 import { TherapistProfileModel } from '../../models/therapist-profile.model';
+import { CenterProfileModel }    from '../../models/center-profile.model';
 import { ChildModel }            from '../../models/child.model';
 import { AppError }              from '../../middleware/error';
 import { uploadToCloudinary }    from '../../config/cloudinary';
 import type { AuthPayload }      from '../../middleware/auth';
 import type { EnrollTherapistInput } from './users.therapist-schema';
+import type { EnrollCenterHeadInput } from './users.center-head-schema';
 import type { EnrollParentInput }    from './users.parent-schema';
 import type { EnrollStaffInput }     from './users.staff-schema';
+import { encrypt } from '../../utils/crypto';
 
 export async function getMe(user: AuthPayload) {
   const doc = await UserModel.findById(user.sub).lean();
@@ -91,7 +94,9 @@ export async function enrollTherapist(input: EnrollTherapistInput, caller: AuthP
     password_hash: hash,
     role:          'therapist',
     is_verified:   true,
+    
   });
+
 
   const profile = await TherapistProfileModel.create({
     user_id:          user._id,
@@ -110,6 +115,7 @@ export async function enrollTherapist(input: EnrollTherapistInput, caller: AuthP
     session_modes:    input.session_modes ?? [],
     session_duration: input.session_duration ?? 45,
     identity_proof_type: input.identity_proof_type,
+    
   });
 
   return { user, profile };
@@ -192,3 +198,46 @@ export async function updateMe(user: AuthPayload, updates: { name?: string; phot
   if (!doc) throw new AppError('NOT_FOUND', 'User not found');
   return doc;
 }
+
+
+export async function enrollCenterHead(input: EnrollCenterHeadInput) {
+  const existing = await UserModel.findOne({ phone: input.phone });
+
+  if (existing) {
+    throw new AppError("CONFLICT", "Phone number already registered");
+  }
+
+  const hash = await bcrypt.hash(input.password, 12);
+
+  const user = await UserModel.create({
+    name: input.name,
+    phone: input.phone,
+    email: input.email,
+    password_hash: hash,
+    role: "center_head",
+    is_verified: true,
+  });
+
+  const encryptedPassword = encrypt(
+    input.smtp_credentials.smtp_password
+  );
+
+  const profile = await CenterProfileModel.create({
+    user_id: user._id,
+
+    center_name: input.center_name,
+
+    smtp_host: input.smtp_credentials.smtp_host,
+
+    smtp_port: input.smtp_credentials.smtp_port,
+
+    smtp_secure: input.smtp_credentials.smtp_secure,
+
+    smtp_user: input.smtp_credentials.smtp_user,
+
+    smtp_password: encryptedPassword,
+  });
+
+  return { user, profile };
+}
+

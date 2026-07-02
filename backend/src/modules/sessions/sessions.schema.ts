@@ -26,5 +26,32 @@ export const SubmitNotesSchema = z.object({
   follow_up_required:  z.boolean().default(false),
 });
 
+export const UpdateSessionSchema = z.object({
+
+  scheduled_at: z.string()
+    .datetime({ offset: true })
+    .optional(),
+
+  duration_min: z.number()
+    .int()
+    .min(15)
+    .max(180)
+    .optional(),
+
+  type: z.enum([
+    "speech",
+    "ot",
+    "behavior",
+    "special_ed",
+  ]).optional(),
+
+  mode: z.enum([
+    "online",
+    "offline",
+  ]).optional(),
+
+});
+
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 export type SubmitNotesInput   = z.infer<typeof SubmitNotesSchema>;
+export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;

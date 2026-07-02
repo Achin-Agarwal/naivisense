@@ -4,8 +4,10 @@ import { UserModel }              from '../../models/user.model';
 import { AppError }               from '../../middleware/error';
 import type { AuthPayload }       from '../../middleware/auth';
 import { snapshotQueue }          from '../../jobs/queues';
-import { syncCalendarEvent }      from '../google/google.service';
-import type { CreateSessionInput, SubmitNotesInput } from './sessions.schema';
+import { syncCalendarEvent, updateCalendarEvent, deleteCalendarEvent }      from '../google/google.service';
+import type { CreateSessionInput, SubmitNotesInput, UpdateSessionInput } from './sessions.schema';
+import { sendSessionRescheduledMailToParent } from "../mail/mail.service";
+
 
 export async function createSession(input: CreateSessionInput, user: AuthPayload) {
   if (user.role !== 'therapist') {
@@ -49,6 +51,180 @@ export async function createSession(input: CreateSessionInput, user: AuthPayload
   }
 
   return session;
+}
+
+export async function updateSession(
+
+  sessionId: string,
+
+  input: UpdateSessionInput,
+
+  user: AuthPayload,
+
+) {
+
+  if (user.role !== "therapist") {
+    throw new AppError(
+      "FORBIDDEN",
+      "Only therapists can update sessions"
+    );
+  }
+
+  const session = await SessionModel.findById(sessionId);
+
+  if (!session) {
+    throw new AppError(
+      "NOT_FOUND",
+      "Session not found"
+    );
+  }
+
+  if (session.therapist_id.toString() !== user.sub) {
+    throw new AppError(
+      "FORBIDDEN",
+      "This is not your session"
+    );
+  }
+
+  if (input.scheduled_at) {
+    session.scheduled_at = new Date(input.scheduled_at);
+  }
+
+  if (input.duration_min !== undefined) {
+    session.duration_min = input.duration_min;
+  }
+
+  if (input.mode) {
+    session.mode = input.mode;
+  }
+
+  if (input.type) {
+    session.type = input.type;
+  }
+
+  await session.save();
+
+  if (
+  session.mode === "online" &&
+  session.calendar_event_id
+) {
+
+  const child = await ChildModel.findById(session.child_id);
+
+  if (child) {
+
+    const [parent, therapist] = await Promise.all([
+
+      UserModel.findById(child.parent_id),
+
+      UserModel.findById(user.sub),
+
+    ]);
+
+    await updateCalendarEvent({
+
+      eventId: session.calendar_event_id,
+
+      scheduledAt: session.scheduled_at,
+
+      durationMin: session.duration_min,
+
+      childName: child.name,
+
+      parentEmail:
+        child.parent_email ??
+        parent?.email,
+
+      therapistEmail:
+        therapist?.email,
+
+    });
+
+    // -------- SEND MAIL TO PARENT --------
+
+    if (parent?.email) {
+
+      await sendSessionRescheduledMailToParent(
+
+        child.center_id!.toString(),   // sender SMTP owner
+
+        parent.email,
+
+        parent.name,
+
+        child.name,
+
+        therapist?.name ?? "Therapist",
+
+        session.scheduled_at,
+
+        session.meeting_link
+
+      );
+
+    }
+
+  }
+
+}
+}
+
+export async function cancelSession(
+  sessionId: string,
+  user: AuthPayload
+) {
+
+  if (user.role !== "therapist") {
+    throw new AppError(
+      "FORBIDDEN",
+      "Only therapists can cancel sessions"
+    );
+  }
+
+  const session =
+    await SessionModel.findById(sessionId);
+
+  if (!session) {
+    throw new AppError(
+      "NOT_FOUND",
+      "Session not found"
+    );
+  }
+
+  if (
+    session.therapist_id.toString() !== user.sub
+  ) {
+    throw new AppError(
+      "FORBIDDEN",
+      "This is not your session"
+    );
+  }
+
+  if (
+    session.mode === "online" &&
+    session.calendar_event_id
+  ) {
+
+    await deleteCalendarEvent(
+      session.calendar_event_id
+    );
+
+  }
+
+  session.status = "cancelled";
+
+  session.meeting_link = undefined;
+
+  session.calendar_event_id = undefined;
+
+  session.calendar_provider = undefined;
+
+  session.calendar_synced_at = undefined;
+
+  await session.save();
+
+  return session;
+
 }
 
 export async function submitNotes(sessionId: string, notes: SubmitNotesInput, user: AuthPayload) {

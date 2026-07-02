@@ -1,5 +1,5 @@
 import * as SessionService  from './sessions.service';
-import { CreateSessionSchema, SubmitNotesSchema } from './sessions.schema';
+import { CreateSessionSchema, SubmitNotesSchema, UpdateSessionSchema } from './sessions.schema';
 import { AppError }          from '../../middleware/error';
 import { asyncHandler }      from '../../utils/http';
 
@@ -7,6 +7,32 @@ export const create = asyncHandler(async (req, res) => {
   const input   = CreateSessionSchema.parse(req.body);
   const session = await SessionService.createSession(input, req.user!);
   res.status(201).json(session);
+});
+
+export const update = asyncHandler(async (req, res) => {
+
+  const input = UpdateSessionSchema.parse(req.body);
+
+  const session = await SessionService.updateSession(
+    req.params.id,
+    input,
+    req.user!
+  );
+
+  res.json(session);
+
+});
+
+export const cancel = asyncHandler(async (req, res) => {
+
+  const session =
+    await SessionService.cancelSession(
+      req.params.id,
+      req.user!
+    );
+
+  res.json(session);
+
 });
 
 export const submitNotes = asyncHandler(async (req, res) => {
