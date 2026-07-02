@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redis }  from '../config/redis';
+import { env }  from '../config/env';
 import logger     from '../utils/logger';
 
 export const snapshotWorker = new Worker(
@@ -9,7 +9,15 @@ export const snapshotWorker = new Worker(
     logger.info({ childId }, 'Snapshot rebuild queued — AI service not yet connected (stub)');
     // Full: POST to AI service /snapshot/rebuild/:childId
   },
-  { connection: redis, concurrency: 5 },
+  { 
+    connection: { 
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+    }, 
+    concurrency: 5 
+  },
 );
 
 snapshotWorker.on('failed', (job, err) => {

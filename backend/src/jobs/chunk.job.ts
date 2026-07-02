@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redis }  from '../config/redis';
+import { env }  from '../config/env';
 import logger     from '../utils/logger';
 
 export const chunkWorker = new Worker(
@@ -9,7 +9,15 @@ export const chunkWorker = new Worker(
     logger.info({ event_type, child_id }, 'Chunk event queued — AI service not yet connected (stub)');
     // Full: POST to AI service /chunk/from-event
   },
-  { connection: redis, concurrency: 10 },
+  { 
+    connection: { 
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+    }, 
+    concurrency: 10 
+  },
 );
 
 chunkWorker.on('failed', (job, err) => {

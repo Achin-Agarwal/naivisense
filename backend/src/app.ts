@@ -11,6 +11,7 @@ import sessionsRoutes    from './modules/sessions/sessions.routes';
 import homePlansRoutes   from './modules/home-plans/home-plans.routes';
 import dietPlansRoutes   from './modules/diet-plans/diet-plans.routes';
 import verificationRoutes from './modules/verification/verification.routes';
+import sessionTimingsRoutes from './modules/session-timings/session-timings.routes';
 import alertsRoutes      from './modules/alerts/alerts.routes';
 import reportsRoutes     from './modules/reports/reports.routes';
 import aiRoutes          from './modules/ai/ai.routes';
@@ -40,6 +41,7 @@ app.use(`${api}/verification`, verificationRoutes);
 app.use(`${api}/alerts`,       alertsRoutes);
 app.use(`${api}/reports`,      reportsRoutes);
 app.use(`${api}/ai`,           aiRoutes);
+app.use(`${api}/session-timings`, sessionTimingsRoutes);
 
 app.use(errorHandler);
 

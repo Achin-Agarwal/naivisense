@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { redis }                  from '../config/redis';
+import { env }                  from '../config/env';
 import logger                     from '../utils/logger';
 
 export const reportWorker = new Worker(
@@ -8,7 +8,14 @@ export const reportWorker = new Worker(
     logger.info({ jobId: job.id }, 'Monthly report job triggered — stub');
     // Full: generate and store monthly PDF reports for all active children
   },
-  { connection: redis },
+  { 
+    connection: { 
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+    }
+  },
 );
 
 reportWorker.on('failed', (job, err) => {
