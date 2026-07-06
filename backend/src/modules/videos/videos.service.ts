@@ -6,7 +6,7 @@ import type { AuthPayload }        from '../../middleware/auth';
 import type { CreateVideoInput, UpdateVideoInput } from './videos.schema';
 
 const UPLOAD_ROLES = ['parent', 'therapist', 'clinical_psychologist', 'center_head'] as const;
-const ASSIGN_ROLES = ['therapist', 'clinical_psychologist', 'center_head'] as const;
+const ASSIGN_ROLES = ['therapist', 'clinical_psychologist'] as const;
 
 async function assertCanAccessChild(user: AuthPayload, childId: string) {
   const child = await ChildModel.findById(childId).lean();
@@ -21,7 +21,6 @@ async function assertCanAccessChild(user: AuthPayload, childId: string) {
   if (!canAccess) throw new AppError('FORBIDDEN', 'Access denied for this child');
 }
 
-// 1) UPLOAD VIDEO
 export async function createVideo(input: CreateVideoInput, file: Express.Multer.File, user: AuthPayload) {
   if (!(UPLOAD_ROLES as readonly string[]).includes(user.role)) {
     throw new AppError('FORBIDDEN', 'You are not allowed to upload videos');
@@ -71,7 +70,6 @@ export async function updateVideo(id: string, updates: UpdateVideoInput, user: A
   return VideoModel.findByIdAndUpdate(id, { $set: updates }, { new: true });
 }
 
-// 2) DELETE VIDEO
 export async function deleteVideo(id: string, user: AuthPayload) {
   const video = await VideoModel.findById(id).lean();
   if (!video) throw new AppError('NOT_FOUND', 'Video not found');
@@ -82,7 +80,6 @@ export async function deleteVideo(id: string, user: AuthPayload) {
   await VideoModel.findByIdAndDelete(id);
 }
 
-// 3) ASSIGN VIDEO
 export async function assignVideo(videoId: string, childId: string, user: AuthPayload) {
   if (!(ASSIGN_ROLES as readonly string[]).includes(user.role)) {
     throw new AppError('FORBIDDEN', 'You are not allowed to assign videos');
@@ -90,6 +87,13 @@ export async function assignVideo(videoId: string, childId: string, user: AuthPa
 
   const video = await VideoModel.findById(videoId);
   if (!video) throw new AppError('NOT_FOUND', 'Video not found');
+
+  // A video that already belongs to a specific child (child_id set) was
+  // uploaded for that child only — it must never be assignable to a
+  // different child, since that would leak one family's video to another.
+  if (video.child_id) {
+    throw new AppError('FORBIDDEN', 'This video already belongs to a specific child and cannot be assigned to others');
+  }
 
   await assertCanAccessChild(user, childId);
 
@@ -102,7 +106,6 @@ export async function assignVideo(videoId: string, childId: string, user: AuthPa
   return video;
 }
 
-// 4) DE-ASSIGN VIDEO
 export async function deassignVideo(videoId: string, childId: string, user: AuthPayload) {
   if (!(ASSIGN_ROLES as readonly string[]).includes(user.role)) {
     throw new AppError('FORBIDDEN', 'You are not allowed to deassign videos');

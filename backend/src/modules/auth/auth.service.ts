@@ -24,11 +24,6 @@ export async function register(input: RegisterInput) {
 }
 
 export async function login(input: LoginInput) {
-<<<<<<< HEAD
-  let user = await UserModel.findOne({ phone: input.phone });
-
-  if (!user) throw new AppError('UNAUTHORIZED', 'Invalid phone or password');
-=======
   const attempt = failedLogins.get(input.phone);
   if (attempt?.lockedUntil && attempt.lockedUntil > Date.now()) {
     throw new AppError('UNAUTHORIZED', 'Account temporarily locked. Try again later.');
@@ -39,7 +34,6 @@ export async function login(input: LoginInput) {
     recordFailedLogin(input.phone);
     throw new AppError('UNAUTHORIZED', 'Invalid phone or password');
   }
->>>>>>> 621065d26cd57f5b6029f004fd0285600a34d548
 
   const ok = await bcrypt.compare(input.password, user.password_hash);
   if (!ok) {
