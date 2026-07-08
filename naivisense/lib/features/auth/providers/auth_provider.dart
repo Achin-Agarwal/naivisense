@@ -11,12 +11,14 @@ class AuthState {
   final UserModel? user;
   final String? error;
   final bool loading;
+  final String? token;
 
   const AuthState({
     this.status = AuthStatus.unknown,
     this.user,
     this.error,
     this.loading = false,
+    this.token,
   });
 
   AuthState copyWith({
@@ -24,28 +26,18 @@ class AuthState {
     UserModel? user,
     String? error,
     bool? loading,
-  }) =>
-      AuthState(
-        status:  status  ?? this.status,
-        user:    user    ?? this.user,
-        error:   error,
-        loading: loading ?? this.loading,
-      );
+  }) => AuthState(
+    status: status ?? this.status,
+    user: user ?? this.user,
+    error: error,
+    loading: loading ?? this.loading,
+  );
 }
 
 class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   Future<AuthState> build() async {
-    final token = await StorageService.instance.getAccessToken();
-    if (token == null) {
-      return const AuthState(status: AuthStatus.unauthenticated);
-    }
-    try {
-      final user = await ref.read(authRepositoryProvider).getMe();
-      return AuthState(status: AuthStatus.authenticated, user: user);
-    } catch (_) {
-      return const AuthState(status: AuthStatus.unauthenticated);
-    }
+    return const AuthState(status: AuthStatus.unauthenticated);
   }
 
   Future<void> login(String phone, String password) async {
@@ -54,23 +46,30 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       final auth = await ref
           .read(authRepositoryProvider)
           .login(LoginRequest(phone: phone, password: password));
-      state = AsyncValue.data(AuthState(
-        status: AuthStatus.authenticated,
-        user:   auth.user,
-      ));
+
+      state = AsyncValue.data(
+        AuthState(
+          status: AuthStatus.authenticated,
+          user: auth.user,
+          token: auth.accessToken,
+        ),
+      );
+
     } catch (e) {
-      state = AsyncValue.data(AuthState(
-        status: AuthStatus.unauthenticated,
-        error:  e.toString(),
-      ));
+      state = AsyncValue.data(
+        AuthState(status: AuthStatus.unauthenticated, error: e.toString()),
+      );
     }
   }
 
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
-    state = const AsyncValue.data(AuthState(status: AuthStatus.unauthenticated));
+    state = const AsyncValue.data(
+      AuthState(status: AuthStatus.unauthenticated),
+    );
   }
 }
 
-final authProvider =
-    AsyncNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

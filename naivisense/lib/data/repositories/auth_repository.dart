@@ -18,10 +18,13 @@ class AuthRepository {
     try {
       final res = await _api.post('/auth/login', data: req.toJson());
       final auth = AuthResponse.fromJson(res.data as Map<String, dynamic>);
+      final access = auth.accessToken;
+      final refresh = auth.refreshToken;
       await StorageService.instance.saveTokens(
-        access:  auth.accessToken,
-        refresh: auth.refreshToken,
+        access: access,
+        refresh: refresh,
       );
+      final test = await StorageService.instance.getAccessToken();
       await StorageService.instance.saveRole(auth.user.role);
       await StorageService.instance.saveUserId(auth.user.id);
       return auth;
@@ -35,7 +38,7 @@ class AuthRepository {
       final res = await _api.post('/auth/register', data: req.toJson());
       final auth = AuthResponse.fromJson(res.data as Map<String, dynamic>);
       await StorageService.instance.saveTokens(
-        access:  auth.accessToken,
+        access: auth.accessToken,
         refresh: auth.refreshToken,
       );
       await StorageService.instance.saveRole(auth.user.role);

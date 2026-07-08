@@ -105,88 +105,139 @@ class _CreateDietChartScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Create Diet Chart'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: BackButton(onPressed: () => Navigator.pop(context)),
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _DateRow(
-              label: 'Start Date',
-              date: _startDate,
-              onPick: (d) => setState(() => _startDate = d),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mediaQuery = MediaQuery.of(context);
+        final width = constraints.maxWidth;
+        final isMobile = width < 600;
+        final isTablet = width >= 600 && width < 1024;
+        final horizontalPadding = isMobile ? 16.0 : 24.0;
+        final verticalPadding = isMobile ? 16.0 : 24.0;
+        final spacingSmall = isMobile ? 8.0 : 10.0;
+        final spacingMedium = isMobile ? 12.0 : 16.0;
+        final spacingLarge = isMobile ? 20.0 : 24.0;
+        final buttonHeight = isMobile ? 50.0 : 54.0;
+        final buttonRadius = isMobile ? 12.0 : 14.0;
+        final titleFontSize = isMobile ? 15.0 : isTablet ? 16.0 : 17.0;
+        final errorFontSize = isMobile ? 13.0 : 14.0;
+        final buttonFontSize = isMobile ? 15.0 : 16.0;
+
+        final content = Form(
+          key: _formKey,
+          child: ListView(
+            // Responsive padding keeps the form clear of system UI and keyboard.
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              verticalPadding,
+              horizontalPadding,
+              verticalPadding + mediaQuery.viewInsets.bottom + 16,
             ),
-            const SizedBox(height: 12),
-            _DateRow(
-              label: 'End Date',
-              date: _endDate,
-              onPick: (d) => setState(() => _endDate = d),
-            ),
-            const SizedBox(height: 20),
-            const Text('Meals',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            ..._meals.asMap().entries.map((e) => _MealCard(
-                  index: e.key,
-                  entry: e.value,
-                  onRemove: _meals.length > 1
-                      ? () => setState(() => _meals.removeAt(e.key))
-                      : null,
-                )),
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () => setState(() => _meals.add(_MealEntry())),
-              icon: const Icon(Icons.add),
-              label: const Text('Add Meal'),
-              style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryBlue),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-                border: OutlineInputBorder(),
+            children: [
+              _DateRow(
+                label: 'Start Date',
+                date: _startDate,
+                isMobile: isMobile,
+                onPick: (d) => setState(() => _startDate = d),
               ),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!,
-                  style: const TextStyle(
-                      color: AppColors.softCoral, fontSize: 13)),
-            ],
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.mintGreen,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+              SizedBox(height: spacingMedium),
+              _DateRow(
+                label: 'End Date',
+                date: _endDate,
+                isMobile: isMobile,
+                onPick: (d) => setState(() => _endDate = d),
+              ),
+              SizedBox(height: spacingLarge),
+              Text('Meals',
+                  style: TextStyle(
+                      fontSize: titleFontSize, fontWeight: FontWeight.w600)),
+              SizedBox(height: spacingMedium),
+              ..._meals.asMap().entries.map((e) => _MealCard(
+                    index: e.key,
+                    entry: e.value,
+                    isMobile: isMobile,
+                    onRemove: _meals.length > 1
+                        ? () => setState(() => _meals.removeAt(e.key))
+                        : null,
+                  )),
+              SizedBox(height: spacingSmall),
+              TextButton.icon(
+                onPressed: () => setState(() => _meals.add(_MealEntry())),
+                icon: Icon(Icons.add, size: isMobile ? 20 : 22),
+                label: Text('Add Meal',
+                    style: TextStyle(fontSize: isMobile ? 14 : 15)),
+                style:
+                    TextButton.styleFrom(foregroundColor: AppColors.primaryBlue),
+              ),
+              SizedBox(height: spacingMedium),
+              TextFormField(
+                controller: _notesCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Notes (optional)',
+                  border: OutlineInputBorder(),
                 ),
-                child: _loading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2)
-                    : const Text('Save Diet Chart',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 15)),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+              if (_error != null) ...[
+                SizedBox(height: spacingMedium),
+                Text(_error!,
+                    style: TextStyle(
+                        color: AppColors.softCoral, fontSize: errorFontSize)),
+              ],
+              SizedBox(height: spacingLarge),
+              SizedBox(
+                height: buttonHeight,
+                child: ElevatedButton(
+                  onPressed: _loading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.mintGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(buttonRadius)),
+                  ),
+                  child: _loading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2)
+                      : Text('Save Diet Chart',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: buttonFontSize)),
+                ),
+              ),
+              SizedBox(height: isMobile ? 32 : 40),
+            ],
+          ),
+        );
+
+        final responsiveBody = isMobile
+            ? content
+            // Center and constrain wider layouts so the form stays readable.
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    // Forms stay comfortably readable on tablet and desktop widths.
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: content,
+                    ),
+                  ),
+                ),
+              );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            title: const Text('Create Diet Chart'),
+            backgroundColor: AppColors.surface,
+            elevation: 0,
+            leading: BackButton(onPressed: () => Navigator.pop(context)),
+          ),
+          body: responsiveBody,
+        );
+      },
     );
   }
 }
@@ -194,12 +245,22 @@ class _CreateDietChartScreenState
 class _DateRow extends StatelessWidget {
   final String label;
   final DateTime date;
+  final bool isMobile;
   final ValueChanged<DateTime> onPick;
   const _DateRow(
-      {required this.label, required this.date, required this.onPick});
+      {required this.label,
+      required this.date,
+      required this.isMobile,
+      required this.onPick});
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final padding = isMobile ? 14.0 : 16.0;
+    final radius = isMobile ? 10.0 : 12.0;
+    final iconSize = isMobile ? 16.0 : 18.0;
+    final fontSize = isMobile ? 13.0 : 14.0;
+
     return GestureDetector(
       onTap: () async {
         final picked = await showDatePicker(
@@ -211,19 +272,25 @@ class _DateRow extends StatelessWidget {
         if (picked != null) onPick(picked);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        // Responsive sizing preserves tap targets without crowding small screens.
+        padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(color: AppColors.divider),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_outlined,
-                size: 16, color: AppColors.primaryBlue),
-            const SizedBox(width: 10),
-            Text('$label: ${date.day}/${date.month}/${date.year}',
-                style: const TextStyle(fontSize: 13)),
+            Icon(Icons.calendar_today_outlined,
+                size: iconSize, color: AppColors.primaryBlue),
+            SizedBox(width: isMobile ? 10 : 12),
+            Expanded(
+              child: Text('$label: ${date.day}/${date.month}/${date.year}',
+                  overflow: TextOverflow.ellipsis,
+                  textScaleFactor:
+                      mediaQuery.textScaleFactor.clamp(1.0, 1.2).toDouble(),
+                  style: TextStyle(fontSize: fontSize)),
+            ),
           ],
         ),
       ),
@@ -250,9 +317,13 @@ class _MealEntry {
 class _MealCard extends StatefulWidget {
   final int index;
   final _MealEntry entry;
+  final bool isMobile;
   final VoidCallback? onRemove;
   const _MealCard(
-      {required this.index, required this.entry, required this.onRemove});
+      {required this.index,
+      required this.entry,
+      required this.isMobile,
+      required this.onRemove});
 
   @override
   State<_MealCard> createState() => _MealCardState();
@@ -261,12 +332,20 @@ class _MealCard extends StatefulWidget {
 class _MealCardState extends State<_MealCard> {
   @override
   Widget build(BuildContext context) {
+    final marginBottom = widget.isMobile ? 12.0 : 16.0;
+    final padding = widget.isMobile ? 14.0 : 16.0;
+    final radius = widget.isMobile ? 12.0 : 14.0;
+    final titleFontSize = widget.isMobile ? 13.0 : 14.0;
+    final fieldSpacing = widget.isMobile ? 8.0 : 10.0;
+    final iconSize = widget.isMobile ? 18.0 : 20.0;
+    final optionFontSize = widget.isMobile ? 13.0 : 14.0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: EdgeInsets.only(bottom: marginBottom),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: AppColors.divider),
       ),
       child: Column(
@@ -274,19 +353,23 @@ class _MealCardState extends State<_MealCard> {
         children: [
           Row(
             children: [
-              Text('Meal ${widget.index + 1}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
+              Expanded(
+                child: Text('Meal ${widget.index + 1}',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: titleFontSize)),
+              ),
               const Spacer(),
               if (widget.onRemove != null)
                 GestureDetector(
                   onTap: widget.onRemove,
-                  child: const Icon(Icons.remove_circle_outline,
-                      color: AppColors.softCoral, size: 18),
+                  child: Icon(Icons.remove_circle_outline,
+                      color: AppColors.softCoral, size: iconSize),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: fieldSpacing + 2),
           TextFormField(
             controller: widget.entry.nameCtrl,
             decoration: const InputDecoration(
@@ -297,53 +380,67 @@ class _MealCardState extends State<_MealCard> {
             validator: (v) =>
                 v == null || v.trim().isEmpty ? 'Required' : null,
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: widget.entry.mealTime,
-                  decoration: const InputDecoration(
-                    labelText: 'Time',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+          SizedBox(height: fieldSpacing),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final dropdownWidth = constraints.maxWidth < 340
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - fieldSpacing) / 2;
+
+              return Wrap(
+                // Wrap prevents the paired dropdowns from overflowing on narrow screens.
+                spacing: fieldSpacing,
+                runSpacing: fieldSpacing,
+                children: [
+                  SizedBox(
+                    width: dropdownWidth,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: widget.entry.mealTime,
+                      decoration: const InputDecoration(
+                        labelText: 'Time',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: ['breakfast', 'lunch', 'dinner', 'snack']
+                          .map((t) => DropdownMenuItem(
+                                value: t,
+                                child: Text(
+                                    t[0].toUpperCase() + t.substring(1),
+                                    style:
+                                        TextStyle(fontSize: optionFontSize)),
+                              ))
+                          .toList(),
+                      onChanged: (v) =>
+                          setState(() => widget.entry.mealTime = v!),
+                    ),
                   ),
-                  items: ['breakfast', 'lunch', 'dinner', 'snack']
-                      .map((t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(
-                                t[0].toUpperCase() + t.substring(1),
-                                style: const TextStyle(fontSize: 13)),
-                          ))
-                      .toList(),
-                  onChanged: (v) =>
-                      setState(() => widget.entry.mealTime = v!),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: widget.entry.frequency,
-                  decoration: const InputDecoration(
-                    labelText: 'Frequency',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                  SizedBox(
+                    width: dropdownWidth,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: widget.entry.frequency,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: ['daily', 'weekly']
+                          .map((f) => DropdownMenuItem(
+                                value: f,
+                                child: Text(
+                                    f[0].toUpperCase() + f.substring(1),
+                                    style:
+                                        TextStyle(fontSize: optionFontSize)),
+                              ))
+                          .toList(),
+                      onChanged: (v) =>
+                          setState(() => widget.entry.frequency = v!),
+                    ),
                   ),
-                  items: ['daily', 'weekly']
-                      .map((f) => DropdownMenuItem(
-                            value: f,
-                            child: Text(
-                                f[0].toUpperCase() + f.substring(1),
-                                style: const TextStyle(fontSize: 13)),
-                          ))
-                      .toList(),
-                  onChanged: (v) =>
-                      setState(() => widget.entry.frequency = v!),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: fieldSpacing),
           TextFormField(
             controller: widget.entry.caloriesCtrl,
             keyboardType: TextInputType.number,
@@ -353,7 +450,7 @@ class _MealCardState extends State<_MealCard> {
               isDense: true,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: fieldSpacing),
           TextFormField(
             controller: widget.entry.ingredientsCtrl,
             decoration: const InputDecoration(
@@ -362,7 +459,7 @@ class _MealCardState extends State<_MealCard> {
               isDense: true,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: fieldSpacing),
           TextFormField(
             controller: widget.entry.descCtrl,
             decoration: const InputDecoration(

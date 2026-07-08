@@ -18,7 +18,7 @@ class _EnrollmentWizardScreenState
   final _formKeys = List.generate(6, (_) => GlobalKey<FormState>());
 
   // ── Step 1: Identity ─────────────────────────────────────────────────────
-  final _nameCtr     = TextEditingController();
+  final _nameCtr = TextEditingController();
   final _nicknameCtr = TextEditingController();
   DateTime? _dob;
   String _gender = 'boy';
@@ -27,65 +27,94 @@ class _EnrollmentWizardScreenState
   // ── Step 2: Diagnosis ─────────────────────────────────────────────────────
   final _diagnoses = <String>{};
   String _severity = 'mild';
-  final _concerns  = <String>{};
+  final _concerns = <String>{};
 
   // ── Step 3: Medical history ───────────────────────────────────────────────
-  String _birthHistory    = 'normal';
-  bool _milestonesDelay   = false;
-  bool _hearingIssues     = false;
-  bool _visionIssues      = false;
-  final _medications      = <String>[];
-  final _medCtr           = TextEditingController();
-  bool _hadPrevTherapy    = false;
-  final _prevTypes        = <String>{};
-  int  _prevMonths        = 0;
-  final _progressCtr      = TextEditingController();
+  String _birthHistory = 'normal';
+  bool _milestonesDelay = false;
+  bool _hearingIssues = false;
+  bool _visionIssues = false;
+  final _medications = <String>[];
+  final _medCtr = TextEditingController();
+  bool _hadPrevTherapy = false;
+  final _prevTypes = <String>{};
+  int _prevMonths = 0;
+  final _progressCtr = TextEditingController();
 
   // ── Step 4: Functional baseline ──────────────────────────────────────────
-  String _commLevel     = 'non_verbal';
+  String _commLevel = 'non_verbal';
   double _attentionMins = 5;
-  String _socialLevel   = 'avoids';
-  String _motorLevel    = 'low';
-  String _behaviorPat   = 'mixed';
+  String _socialLevel = 'avoids';
+  String _motorLevel = 'low';
+  String _behaviorPat = 'mixed';
 
   // ── Step 5: Sangat / Home context ────────────────────────────────────────
   final _caregiverCtr = TextEditingController();
-  double _screenTime  = 2;
-  String _playType    = 'guided';
-  String _parentInv   = 'medium';
+  double _screenTime = 2;
+  String _playType = 'guided';
+  String _parentInv = 'medium';
 
   // ── Step 6: Goals & Consent ───────────────────────────────────────────────
-  final _therapyTargets       = <String>{};
-  final _therapistAssignments = <String, String?>{};   // therapy_type → therapist_id
-  final _therapistSchedules   = <String, _ScheduleEntry?>{};  // therapy_type → schedule
-  final _goalPriorities       = <String>{};
-  double _timeline      = 6;
-  final _consentByCtr   = TextEditingController();
-  bool _consentGiven    = false;
+  final _therapyTargets = <String>{};
+  final _therapistAssignments =
+      <String, String?>{}; // therapy_type → therapist_id
+  final _therapistSchedules =
+      <String, _ScheduleEntry?>{}; // therapy_type → schedule
+  final _goalPriorities = <String>{};
+  double _timeline = 6;
+  final _consentByCtr = TextEditingController();
+  bool _consentGiven = false;
 
   // ── Constant option lists ─────────────────────────────────────────────────
   static const _diagnosisOpts = [
-    'ASD', 'ADHD', 'CP', 'Speech Delay', 'Dyslexia',
-    'Down Syndrome', 'Sensory Processing', 'Global Delay', 'Other'
+    'ASD',
+    'ADHD',
+    'CP',
+    'Speech Delay',
+    'Dyslexia',
+    'Down Syndrome',
+    'Sensory Processing',
+    'Global Delay',
+    'Other',
   ];
   static const _concernOpts = [
-    'Speech Delay', 'Poor Attention', 'Hyperactivity',
-    'Social Issues', 'Motor Difficulty', 'Behavioral Challenges',
-    'Feeding Issues', 'Sleep Problems'
+    'Speech Delay',
+    'Poor Attention',
+    'Hyperactivity',
+    'Social Issues',
+    'Motor Difficulty',
+    'Behavioral Challenges',
+    'Feeding Issues',
+    'Sleep Problems',
   ];
   static const _prevTherapyOpts = [
-    'Speech Therapy', 'Occupational Therapy', 'Behavioral Therapy',
-    'Physical Therapy', 'Special Education', 'ABA'
+    'Speech Therapy',
+    'Occupational Therapy',
+    'Behavioral Therapy',
+    'Physical Therapy',
+    'Special Education',
+    'ABA',
   ];
   static const _therapyTargetOpts = [
-    'Speech & Language', 'Occupational Therapy', 'Behavioral Therapy',
-    'Physical Therapy', 'Special Education', 'Social Skills',
-    'Sensory Integration', 'ABA'
+    'Speech & Language',
+    'Occupational Therapy',
+    'Behavioral Therapy',
+    'Physical Therapy',
+    'Special Education',
+    'Social Skills',
+    'Sensory Integration',
+    'ABA',
   ];
   static const _goalOpts = [
-    'Improve Speech', 'Increase Attention', 'Reduce Meltdowns',
-    'Social Interaction', 'Eye Contact', 'Self-Care Skills',
-    'Academic Readiness', 'Motor Development', 'Emotional Regulation'
+    'Improve Speech',
+    'Increase Attention',
+    'Reduce Meltdowns',
+    'Social Interaction',
+    'Eye Contact',
+    'Self-Care Skills',
+    'Academic Readiness',
+    'Motor Development',
+    'Emotional Regulation',
   ];
 
   static const _stepTitles = [
@@ -97,30 +126,54 @@ class _EnrollmentWizardScreenState
     'Goals & Consent',
   ];
 
+  late double w;
+  late double h;
+  late bool isMobile;
+  late bool isTablet;
+  late bool isDesktop;
+
+  void _initResponsive(BoxConstraints constraints, BuildContext context) {
+    w = constraints.maxWidth;
+    h = constraints.maxHeight;
+
+    isMobile = w < 600;
+    isTablet = w >= 600 && w < 1024;
+    isDesktop = w >= 1024;
+  }
+
   @override
   void dispose() {
-    _nameCtr.dispose(); _nicknameCtr.dispose(); _medCtr.dispose();
-    _progressCtr.dispose(); _caregiverCtr.dispose(); _consentByCtr.dispose();
+    _nameCtr.dispose();
+    _nicknameCtr.dispose();
+    _medCtr.dispose();
+    _progressCtr.dispose();
+    _caregiverCtr.dispose();
+    _consentByCtr.dispose();
     super.dispose();
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
   void _next() {
     if (!(_formKeys[_step].currentState?.validate() ?? true)) return;
-    if (_step == 5) { _submit(); return; }
+    if (_step == 5) {
+      _submit();
+      return;
+    }
     setState(() => _step++);
   }
 
-  void _back() { if (_step > 0) setState(() => _step--); }
+  void _back() {
+    if (_step > 0) setState(() => _step--);
+  }
 
   Future<void> _submit() async {
     final now = DateTime.now().toUtc().toIso8601String();
     final payload = {
-      'name':             _nameCtr.text.trim(),
+      'name': _nameCtr.text.trim(),
       if (_nicknameCtr.text.isNotEmpty) 'nickname': _nicknameCtr.text.trim(),
-      'dob':              _dob!.toUtc().toIso8601String(),
-      'gender':           _gender,
-      'parent_id':        _parentId,
+      'dob': _dob!.toUtc().toIso8601String(),
+      'gender': _gender,
+      'parent_id': _parentId,
       'therapists': _therapistAssignments.entries
           .where((e) => e.value != null)
           .map((e) {
@@ -128,46 +181,47 @@ class _EnrollmentWizardScreenState
             return {
               'therapist_id': e.value!,
               'therapy_type': e.key,
-              if (sched != null && sched.days.isNotEmpty) 'schedule': {
-                'days':      sched.days,
-                'from_time': sched.fromTime,
-                'to_time':   sched.toTime,
-              },
+              if (sched != null && sched.days.isNotEmpty)
+                'schedule': {
+                  'days': sched.days,
+                  'from_time': sched.fromTime,
+                  'to_time': sched.toTime,
+                },
             };
           })
           .toList(),
-      'diagnosis':        _diagnoses.toList(),
-      'severity':         _severity,
+      'diagnosis': _diagnoses.toList(),
+      'severity': _severity,
       'primary_concerns': _concerns.toList(),
-      'therapy_targets':  _therapyTargets.toList(),
+      'therapy_targets': _therapyTargets.toList(),
       'medical': {
-        'birth_history':       _birthHistory,
-        'milestones_delay':    _milestonesDelay,
-        'hearing_issues':      _hearingIssues,
-        'vision_issues':       _visionIssues,
+        'birth_history': _birthHistory,
+        'milestones_delay': _milestonesDelay,
+        'hearing_issues': _hearingIssues,
+        'vision_issues': _visionIssues,
         'current_medications': _medications,
       },
       'previous_therapy': {
-        'had_therapy':     _hadPrevTherapy,
-        'types':           _prevTypes.toList(),
+        'had_therapy': _hadPrevTherapy,
+        'types': _prevTypes.toList(),
         'duration_months': _prevMonths,
-        'progress_noted':  _progressCtr.text.trim(),
+        'progress_noted': _progressCtr.text.trim(),
       },
       'functional_baseline': {
         'communication_level': _commLevel,
         'attention_span_mins': _attentionMins.round(),
-        'social_interaction':  _socialLevel,
-        'motor_skills':        _motorLevel,
-        'behavior_pattern':    _behaviorPat,
+        'social_interaction': _socialLevel,
+        'motor_skills': _motorLevel,
+        'behavior_pattern': _behaviorPat,
       },
       'home_context': {
-        'primary_caregiver':  _caregiverCtr.text.trim(),
-        'screen_time_hours':  _screenTime,
-        'play_type':          _playType,
+        'primary_caregiver': _caregiverCtr.text.trim(),
+        'screen_time_hours': _screenTime,
+        'play_type': _playType,
         'parent_involvement': _parentInv,
       },
       'goals': {
-        'priorities':      _goalPriorities.toList(),
+        'priorities': _goalPriorities.toList(),
         'timeline_months': _timeline.round(),
       },
       'consent_record': {
@@ -185,53 +239,83 @@ class _EnrollmentWizardScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(enrollmentProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('New Child Enrollment'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildStepIndicator(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKeys[_step],
-                child: _buildCurrentStep(),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _initResponsive(constraints, context);
+
+        final scale = isMobile
+            ? 1.0
+            : isTablet
+            ? 1.1
+            : 1.25;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('New Child Enrollment'),
+            backgroundColor: AppColors.surface,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-          if (state.error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: Text(state.error!,
-                  style: const TextStyle(color: AppColors.softCoral, fontSize: 13)),
-            ),
-          _buildNavButtons(state.loading),
-        ],
-      ),
+          body: Column(
+            children: [
+              _buildStepIndicator(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(20 * scale),
+                  child: Form(
+                    key: _formKeys[_step],
+                    child: _buildCurrentStep(),
+                  ),
+                ),
+              ),
+              if (state.error != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20 * scale,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    state.error!,
+                    style: TextStyle(
+                      color: AppColors.softCoral,
+                      fontSize: 13 * scale,
+                    ),
+                  ),
+                ),
+              _buildNavButtons(state.loading),
+            ],
+          ),
+        );
+      },
     );
   }
 
   // ── Step indicator ────────────────────────────────────────────────────────
   Widget _buildStepIndicator() {
+    final scale = isMobile
+        ? 1.0
+        : isTablet
+        ? 1.1
+        : 1.2;
+
     return Container(
       color: AppColors.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16 * scale,
+        vertical: 12 * scale,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: List.generate(6, (i) {
-              final done    = i < _step;
+              final done = i < _step;
               final current = i == _step;
+
               return Expanded(
                 child: Row(
                   children: [
@@ -240,7 +324,9 @@ class _EnrollmentWizardScreenState
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: done ? AppColors.primaryBlue : AppColors.divider,
+                          color: done
+                              ? AppColors.primaryBlue
+                              : AppColors.divider,
                         ),
                       ),
                   ],
@@ -248,11 +334,12 @@ class _EnrollmentWizardScreenState
               );
             }),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6 * scale),
           Text(
             'Step ${_step + 1} of 6 — ${_stepTitles[_step]}',
-            style: const TextStyle(
-              color: AppColors.textSecondary, fontSize: 12,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12 * scale,
             ),
           ),
         ],
@@ -262,31 +349,44 @@ class _EnrollmentWizardScreenState
 
   // ── Nav buttons ───────────────────────────────────────────────────────────
   Widget _buildNavButtons(bool loading) {
+    final scale = isMobile
+        ? 1.0
+        : isTablet
+        ? 1.1
+        : 1.2;
+
     return Container(
       color: AppColors.surface,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: EdgeInsets.fromLTRB(
+        20 * scale,
+        12 * scale,
+        20 * scale,
+        24 * scale,
+      ),
       child: Row(
         children: [
           if (_step > 0)
             Expanded(
-              child: AppButton(
-                label: 'Back',
-                outlined: true,
-                onPressed: _back,
-              ),
+              child: AppButton(label: 'Back', outlined: true, onPressed: _back),
             ),
-          if (_step > 0) const SizedBox(width: 12),
+          if (_step > 0) SizedBox(width: 12 * scale),
           Expanded(
             child: AppButton(
-              label:     _step == 5 ? 'Submit Enrollment' : 'Next',
-              loading:   loading,
+              label: _step == 5 ? 'Submit Enrollment' : 'Next',
+              loading: loading,
               onPressed: _next,
-              icon:      _step == 5 ? Icons.check : Icons.arrow_forward,
+              icon: _step == 5 ? Icons.check : Icons.arrow_forward,
             ),
           ),
         ],
       ),
     );
+  }
+
+  double fs(double size) {
+    if (isMobile) return size;
+    if (isTablet) return size * 1.1;
+    return size * 1.25;
   }
 
   Widget _buildCurrentStep() {
@@ -305,29 +405,54 @@ class _EnrollmentWizardScreenState
   // ══════════════════════════════════════════════════════════════════════════
   Widget _buildStep1() {
     final parents = ref.watch(parentsProvider);
+
+    final fieldSpacing = isMobile ? 14.0 : 18.0;
+
+    Widget twoCol(Widget a, Widget b) {
+      if (isMobile)
+        return Column(
+          children: [
+            a,
+            SizedBox(height: fieldSpacing),
+            b,
+          ],
+        );
+      return Row(
+        children: [
+          Expanded(child: a),
+          SizedBox(width: fieldSpacing),
+          Expanded(child: b),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Child Identity', Icons.child_care),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: _nameCtr,
-          decoration: const InputDecoration(
-            labelText: 'Full Name *',
-            prefixIcon: Icon(Icons.person_outline),
+        SizedBox(height: fieldSpacing),
+
+        twoCol(
+          TextFormField(
+            controller: _nameCtr,
+            decoration: const InputDecoration(
+              labelText: 'Full Name *',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Required' : null,
           ),
-          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-        ),
-        const SizedBox(height: 14),
-        TextFormField(
-          controller: _nicknameCtr,
-          decoration: const InputDecoration(
-            labelText: 'Nickname (optional)',
-            prefixIcon: Icon(Icons.face_outlined),
+          TextFormField(
+            controller: _nicknameCtr,
+            decoration: const InputDecoration(
+              labelText: 'Nickname (optional)',
+              prefixIcon: Icon(Icons.face_outlined),
+            ),
           ),
         ),
-        const SizedBox(height: 14),
-        // DOB picker
+
+        SizedBox(height: fieldSpacing),
+
         GestureDetector(
           onTap: () async {
             final picked = await showDatePicker(
@@ -351,16 +476,20 @@ class _EnrollmentWizardScreenState
             ),
           ),
         ),
+
         if (_dob != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'Age: ${_ageYears(_dob!)} years ${_ageMonths(_dob!)} months',
-            style: const TextStyle(color: AppColors.primaryBlue, fontSize: 13),
+            style: TextStyle(color: AppColors.primaryBlue, fontSize: fs(13)),
           ),
         ],
-        const SizedBox(height: 20),
+
+        SizedBox(height: fieldSpacing),
+
         _label('Gender *'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: const ['boy', 'girl', 'other'],
           selected: {_gender},
@@ -368,23 +497,32 @@ class _EnrollmentWizardScreenState
           onTap: (v) => setState(() => _gender = v),
           display: (v) => v[0].toUpperCase() + v.substring(1),
         ),
-        const SizedBox(height: 20),
+
+        SizedBox(height: fieldSpacing),
+
         _label('Parent *'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
+
         parents.when(
           loading: () => const LinearProgressIndicator(),
-          error: (e, _) => Text('Failed to load parents: $e',
-              style: const TextStyle(color: AppColors.softCoral)),
+          error: (e, _) => Text(
+            'Failed to load parents: $e',
+            style: const TextStyle(color: AppColors.softCoral),
+          ),
           data: (list) => DropdownButtonFormField<String>(
-            initialValue: _parentId,
+            value: _parentId,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.family_restroom_outlined),
             ),
             hint: const Text('Select parent'),
-            items: list.map((u) => DropdownMenuItem(
-              value: u.id,
-              child: Text('${u.name} (${u.phone})'),
-            )).toList(),
+            items: list
+                .map(
+                  (u) => DropdownMenuItem(
+                    value: u.id,
+                    child: Text('${u.name} (${u.phone})'),
+                  ),
+                )
+                .toList(),
             onChanged: (v) => setState(() => _parentId = v),
             validator: (v) => v == null ? 'Select a parent' : null,
           ),
@@ -397,24 +535,33 @@ class _EnrollmentWizardScreenState
   // STEP 2 — Diagnosis & Severity
   // ══════════════════════════════════════════════════════════════════════════
   Widget _buildStep2() {
+    final gap = isMobile ? 14.0 : 18.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Diagnosis & Severity', Icons.medical_information_outlined),
-        const SizedBox(height: 16),
+        _sectionTitle(
+          'Diagnosis & Severity',
+          Icons.medical_information_outlined,
+        ),
+        SizedBox(height: gap),
+
         _label('Diagnosis * (select all that apply)'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: _diagnosisOpts,
           selected: _diagnoses,
           onTap: (v) => setState(() {
             _diagnoses.contains(v) ? _diagnoses.remove(v) : _diagnoses.add(v);
           }),
-          validator: _diagnoses.isEmpty ? 'Select at least one' : null,
         ),
-        const SizedBox(height: 20),
+
+        SizedBox(height: gap),
+
         _label('Severity Level *'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: const ['mild', 'moderate', 'severe'],
           selected: {_severity},
@@ -431,9 +578,12 @@ class _EnrollmentWizardScreenState
             'severe': AppColors.softCoral,
           },
         ),
-        const SizedBox(height: 20),
+
+        SizedBox(height: gap),
+
         _label('Primary Concerns (select all that apply)'),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: _concernOpts,
           selected: _concerns,
@@ -444,45 +594,89 @@ class _EnrollmentWizardScreenState
       ],
     );
   }
-
   // ══════════════════════════════════════════════════════════════════════════
   // STEP 3 — Medical & Therapy History
   // ══════════════════════════════════════════════════════════════════════════
+
   Widget _buildStep3() {
+    final gap = isMobile ? 14.0 : 18.0;
+
+    Widget twoCol(Widget a, Widget b) {
+      if (isMobile)
+        return Column(
+          children: [
+            a,
+            SizedBox(height: gap),
+            b,
+          ],
+        );
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: a),
+          SizedBox(width: gap),
+          Expanded(child: b),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Medical & Therapy History', Icons.history_edu_outlined),
-        const SizedBox(height: 16),
-        _label('Birth History *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['normal', 'premature', 'complications'],
-          selected: {_birthHistory},
-          single: true,
-          onTap: (v) => setState(() => _birthHistory = v),
-          display: (v) => v[0].toUpperCase() + v.substring(1),
+        SizedBox(height: gap),
+
+        // Birth history + flags in structured layout
+        twoCol(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _label('Birth History *'),
+              const SizedBox(height: 8),
+              _chipGroup(
+                options: const ['normal', 'premature', 'complications'],
+                selected: {_birthHistory},
+                single: true,
+                onTap: (v) => setState(() => _birthHistory = v),
+                display: (v) => v[0].toUpperCase() + v.substring(1),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _label('Developmental Flags'),
+              const SizedBox(height: 8),
+              _switchTile(
+                'Milestones delayed',
+                _milestonesDelay,
+                (v) => setState(() => _milestonesDelay = v),
+              ),
+              _switchTile(
+                'Hearing issues',
+                _hearingIssues,
+                (v) => setState(() => _hearingIssues = v),
+              ),
+              _switchTile(
+                'Vision issues',
+                _visionIssues,
+                (v) => setState(() => _visionIssues = v),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 20),
-        _label('Developmental Flags'),
-        const SizedBox(height: 8),
-        _switchTile('Developmental milestones delayed', _milestonesDelay,
-            (v) => setState(() => _milestonesDelay = v)),
-        _switchTile('Known hearing issues', _hearingIssues,
-            (v) => setState(() => _hearingIssues = v)),
-        _switchTile('Known vision issues', _visionIssues,
-            (v) => setState(() => _visionIssues = v)),
-        const SizedBox(height: 20),
+
+        SizedBox(height: gap),
+
         _label('Current Medications'),
         const SizedBox(height: 8),
+
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 controller: _medCtr,
-                decoration: const InputDecoration(
-                  hintText: 'Type medication and press Add',
-                ),
+                decoration: const InputDecoration(hintText: 'Add medication'),
               ),
             ),
             const SizedBox(width: 8),
@@ -490,35 +684,44 @@ class _EnrollmentWizardScreenState
               onPressed: () {
                 final v = _medCtr.text.trim();
                 if (v.isNotEmpty) {
-                  setState(() { _medications.add(v); _medCtr.clear(); });
+                  setState(() {
+                    _medications.add(v);
+                    _medCtr.clear();
+                  });
                 }
               },
               child: const Text('Add'),
             ),
           ],
         ),
-        if (_medications.isNotEmpty) ...[
-          const SizedBox(height: 8),
+
+        if (_medications.isNotEmpty)
           Wrap(
             spacing: 8,
             children: _medications
-                .map((m) => Chip(
-                      label: Text(m),
-                      onDeleted: () => setState(() => _medications.remove(m)),
-                    ))
+                .map(
+                  (m) => Chip(
+                    label: Text(m),
+                    onDeleted: () => setState(() => _medications.remove(m)),
+                  ),
+                )
                 .toList(),
           ),
-        ],
-        const SizedBox(height: 20),
+
+        SizedBox(height: gap),
+
         _switchTile(
-          'Child has had previous therapy',
+          'Previous therapy history',
           _hadPrevTherapy,
           (v) => setState(() => _hadPrevTherapy = v),
         ),
+
         if (_hadPrevTherapy) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: gap),
+
           _label('Previous Therapy Types'),
           const SizedBox(height: 8),
+
           _chipGroup(
             options: _prevTherapyOpts,
             selected: _prevTypes,
@@ -526,23 +729,19 @@ class _EnrollmentWizardScreenState
               _prevTypes.contains(v) ? _prevTypes.remove(v) : _prevTypes.add(v);
             }),
           ),
-          const SizedBox(height: 14),
+
+          SizedBox(height: gap),
+
           TextFormField(
-            initialValue: _prevMonths > 0 ? '$_prevMonths' : '',
-            decoration: const InputDecoration(
-              labelText: 'Duration (months)',
-              prefixIcon: Icon(Icons.timelapse_outlined),
-            ),
-            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Duration (months)'),
             onChanged: (v) => _prevMonths = int.tryParse(v) ?? 0,
           ),
-          const SizedBox(height: 14),
+
+          SizedBox(height: gap),
+
           TextFormField(
             controller: _progressCtr,
-            decoration: const InputDecoration(
-              labelText: 'Progress Observed',
-              prefixIcon: Icon(Icons.notes_outlined),
-            ),
+            decoration: const InputDecoration(labelText: 'Progress observed'),
             maxLines: 2,
           ),
         ],
@@ -554,76 +753,119 @@ class _EnrollmentWizardScreenState
   // STEP 4 — Functional Baseline
   // ══════════════════════════════════════════════════════════════════════════
   Widget _buildStep4() {
+    final gap = isMobile ? 14.0 : 18.0;
+
+    Widget card(String title, Widget child) {
+      return Container(
+        padding: EdgeInsets.all(isMobile ? 12 : 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: fs(14),
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: gap),
+            child,
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Functional Baseline', Icons.insights_outlined),
-        const SizedBox(height: 4),
-        const Text(
-          'Where the child stands right now — this becomes the baseline for all future progress measurement.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        SizedBox(height: gap),
+
+        card(
+          'Communication Level',
+          _chipGroup(
+            options: const [
+              'non_verbal',
+              'single_words',
+              'phrases',
+              'sentences',
+            ],
+            selected: {_commLevel},
+            single: true,
+            onTap: (v) => setState(() => _commLevel = v),
+            display: (v) => switch (v) {
+              'non_verbal' => 'Non-Verbal',
+              'single_words' => 'Single Words',
+              'phrases' => 'Phrases',
+              _ => 'Sentences',
+            },
+          ),
         ),
-        const SizedBox(height: 20),
-        _label('Communication Level *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['non_verbal', 'single_words', 'phrases', 'sentences'],
-          selected: {_commLevel},
-          single: true,
-          onTap: (v) => setState(() => _commLevel = v),
-          display: (v) => switch (v) {
-            'non_verbal'   => 'Non-Verbal',
-            'single_words' => 'Single Words',
-            'phrases'      => 'Phrases',
-            _              => 'Sentences',
-          },
+
+        SizedBox(height: gap),
+
+        card(
+          'Attention Span',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${_attentionMins.round()} minutes'),
+              Slider(
+                value: _attentionMins,
+                min: 1,
+                max: 60,
+                divisions: 59,
+                onChanged: (v) => setState(() => _attentionMins = v),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 20),
-        _label('Attention Span: ${_attentionMins.round()} minutes'),
-        Slider(
-          value: _attentionMins,
-          min: 1, max: 60, divisions: 59,
-          activeColor: AppColors.primaryBlue,
-          onChanged: (v) => setState(() => _attentionMins = v),
+
+        SizedBox(height: gap),
+
+        card(
+          'Social & Motor Skills',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _label('Social Interaction'),
+              _chipGroup(
+                options: const ['avoids', 'parallel', 'interactive'],
+                selected: {_socialLevel},
+                single: true,
+                onTap: (v) => setState(() => _socialLevel = v),
+              ),
+              SizedBox(height: gap),
+              _label('Motor Skills'),
+              _chipGroup(
+                options: const ['low', 'medium', 'age_appropriate'],
+                selected: {_motorLevel},
+                single: true,
+                onTap: (v) => setState(() => _motorLevel = v),
+                display: (v) => v == 'age_appropriate'
+                    ? 'Age Appropriate'
+                    : v[0].toUpperCase() + v.substring(1),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        _label('Social Interaction Quality *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['avoids', 'parallel', 'interactive'],
-          selected: {_socialLevel},
-          single: true,
-          onTap: (v) => setState(() => _socialLevel = v),
-          display: (v) => v[0].toUpperCase() + v.substring(1),
-        ),
-        const SizedBox(height: 20),
-        _label('Motor Skills Level *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['low', 'medium', 'age_appropriate'],
-          selected: {_motorLevel},
-          single: true,
-          onTap: (v) => setState(() => _motorLevel = v),
-          display: (v) => switch (v) {
-            'low'    => 'Low',
-            'medium' => 'Medium',
-            _        => 'Age Appropriate',
-          },
-        ),
-        const SizedBox(height: 20),
-        _label('Behavior Pattern *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['calm', 'challenging', 'mixed'],
-          selected: {_behaviorPat},
-          single: true,
-          onTap: (v) => setState(() => _behaviorPat = v),
-          display: (v) => v[0].toUpperCase() + v.substring(1),
-          colors: {
-            'calm': AppColors.mintGreen,
-            'challenging': AppColors.softCoral,
-            'mixed': AppColors.warmYellow,
-          },
+
+        SizedBox(height: gap),
+
+        card(
+          'Behavior Pattern',
+          _chipGroup(
+            options: const ['calm', 'challenging', 'mixed'],
+            selected: {_behaviorPat},
+            single: true,
+            onTap: (v) => setState(() => _behaviorPat = v),
+          ),
         ),
       ],
     );
@@ -633,57 +875,100 @@ class _EnrollmentWizardScreenState
   // STEP 5 — Sangat Layer (Home Context)
   // ══════════════════════════════════════════════════════════════════════════
   Widget _buildStep5() {
+    final gap = isMobile ? 14.0 : 18.0;
+
+    int crossAxis() {
+      if (isMobile) return 1;
+      if (isTablet) return 2;
+      return 3;
+    }
+
+    Widget card(String title, Widget child) {
+      return Container(
+        padding: EdgeInsets.all(isMobile ? 12 : 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: fs(14),
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: gap),
+            child,
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Sangat Layer — Home Context', Icons.home_outlined),
-        const SizedBox(height: 4),
-        const Text(
-          'Home environment directly correlates with therapy outcomes. The AI uses this when generating personalized plans.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _caregiverCtr,
-          decoration: const InputDecoration(
-            labelText: 'Primary Caregiver *',
-            hintText: 'e.g. Mother, Father, Grandparent',
-            prefixIcon: Icon(Icons.person_pin_outlined),
+        SizedBox(height: gap),
+
+        GridView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxis(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: isMobile ? 1.3 : 1.1,
           ),
-          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-        ),
-        const SizedBox(height: 20),
-        _label('Daily Screen Time: ${_screenTime.toStringAsFixed(1)} hours'),
-        Slider(
-          value: _screenTime,
-          min: 0, max: 12, divisions: 24,
-          activeColor: AppColors.primaryBlue,
-          onChanged: (v) => setState(() => _screenTime = v),
-        ),
-        const SizedBox(height: 12),
-        _label('Predominant Play Type *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['alone', 'guided', 'group'],
-          selected: {_playType},
-          single: true,
-          onTap: (v) => setState(() => _playType = v),
-          display: (v) => v[0].toUpperCase() + v.substring(1),
-        ),
-        const SizedBox(height: 20),
-        _label('Parent Involvement Level *'),
-        const SizedBox(height: 8),
-        _chipGroup(
-          options: const ['low', 'medium', 'high'],
-          selected: {_parentInv},
-          single: true,
-          onTap: (v) => setState(() => _parentInv = v),
-          display: (v) => v[0].toUpperCase() + v.substring(1),
-          colors: {
-            'low':    AppColors.softCoral,
-            'medium': AppColors.warmYellow,
-            'high':   AppColors.mintGreen,
-          },
+          children: [
+            card(
+              'Primary Caregiver',
+              TextFormField(
+                controller: _caregiverCtr,
+                decoration: const InputDecoration(
+                  hintText: 'Mother / Father / Guardian',
+                ),
+              ),
+            ),
+            card(
+              'Screen Time',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${_screenTime.toStringAsFixed(1)} hrs'),
+                  Slider(
+                    value: _screenTime,
+                    min: 0,
+                    max: 12,
+                    divisions: 24,
+                    onChanged: (v) => setState(() => _screenTime = v),
+                  ),
+                ],
+              ),
+            ),
+            card(
+              'Play Type',
+              _chipGroup(
+                options: const ['alone', 'guided', 'group'],
+                selected: {_playType},
+                single: true,
+                onTap: (v) => setState(() => _playType = v),
+              ),
+            ),
+            card(
+              'Parent Involvement',
+              _chipGroup(
+                options: const ['low', 'medium', 'high'],
+                selected: {_parentInv},
+                single: true,
+                onTap: (v) => setState(() => _parentInv = v),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -694,13 +979,18 @@ class _EnrollmentWizardScreenState
   // ══════════════════════════════════════════════════════════════════════════
   Widget _buildStep6() {
     final therapists = ref.watch(therapistsProvider);
+    final gap = isMobile ? 14.0 : 18.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Goals, Targets & Consent', Icons.flag_outlined),
-        const SizedBox(height: 16),
-        _label('Therapy Focus Areas * (select all that apply)'),
-        const SizedBox(height: 8),
+        SizedBox(height: gap),
+
+        // ── Therapy Targets ─────────────────────────────
+        _label('Therapy Focus Areas *'),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: _therapyTargetOpts,
           selected: _therapyTargets,
@@ -712,74 +1002,73 @@ class _EnrollmentWizardScreenState
               _therapyTargets.add(v);
             }
           }),
-          validator:
-              _therapyTargets.isEmpty ? 'Select at least one target' : null,
         ),
+
+        SizedBox(height: gap),
+
+        // ── Therapist Assignment ────────────────────────
         if (_therapyTargets.isNotEmpty) ...[
-          const SizedBox(height: 20),
           _sectionTitle('Assign Therapists', Icons.psychology_outlined),
-          const SizedBox(height: 4),
-          const Text(
-            'Optionally assign a therapist for each focus area.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(height: 12),
+          SizedBox(height: gap),
+
           therapists.when(
             loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Text('Failed to load therapists: $e',
-                style: const TextStyle(color: AppColors.softCoral)),
+            error: (e, _) => Text(
+              'Failed to load therapists: $e',
+              style: const TextStyle(color: AppColors.softCoral),
+            ),
             data: (list) => Column(
               children: _therapyTargets.map((target) {
                 final sched = _therapistSchedules[target];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+
+                return Container(
+                  margin: EdgeInsets.only(bottom: gap),
+                  padding: EdgeInsets.all(isMobile ? 12 : 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.divider),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 130,
-                            child: Text(
-                              target,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _therapistAssignments[target],
-                              decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                isDense: true,
-                              ),
-                              hint: const Text('Unassigned',
-                                  style: TextStyle(fontSize: 13)),
-                              items: [
-                                const DropdownMenuItem(
-                                    value: null,
-                                    child: Text('— Unassigned —',
-                                        style: TextStyle(fontSize: 13))),
-                                ...list.map((u) => DropdownMenuItem(
-                                      value: u.id,
-                                      child: Text(u.name,
-                                          style: const TextStyle(fontSize: 13)),
-                                    )),
+                      // ── Top Row ──
+                      isMobile
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  target,
+                                  style: TextStyle(
+                                    fontSize: fs(13),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                _therapistDropdown(list, target),
                               ],
-                              onChanged: (v) => setState(
-                                  () => _therapistAssignments[target] = v),
+                            )
+                          : Row(
+                              children: [
+                                SizedBox(
+                                  width: 160,
+                                  child: Text(
+                                    target,
+                                    style: TextStyle(
+                                      fontSize: fs(13),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _therapistDropdown(list, target),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
+
+                      // ── Schedule ──
                       if (_therapistAssignments[target] != null) ...[
-                        const SizedBox(height: 10),
+                        SizedBox(height: gap),
                         _buildSchedulePicker(target, sched),
                       ],
                     ],
@@ -789,9 +1078,13 @@ class _EnrollmentWizardScreenState
             ),
           ),
         ],
-        const SizedBox(height: 20),
-        _label('Top Priority Goals (select up to 3)'),
-        const SizedBox(height: 8),
+
+        SizedBox(height: gap),
+
+        // ── Goals ───────────────────────────────────────
+        _label('Top Priority Goals (max 3)'),
+        SizedBox(height: 8),
+
         _chipGroup(
           options: _goalOpts,
           selected: _goalPriorities,
@@ -803,45 +1096,50 @@ class _EnrollmentWizardScreenState
             }
           }),
         ),
-        const SizedBox(height: 20),
-        _label('Expected Timeline: ${_timeline.round()} months'),
+
+        SizedBox(height: gap),
+
+        // ── Timeline ───────────────────────────────────
+        Text('Expected Timeline: ${_timeline.round()} months'),
         Slider(
           value: _timeline,
-          min: 1, max: 24, divisions: 23,
-          activeColor: AppColors.primaryBlue,
+          min: 1,
+          max: 24,
+          divisions: 23,
           onChanged: (v) => setState(() => _timeline = v),
         ),
-        const SizedBox(height: 20),
+
+        SizedBox(height: gap),
+
         const Divider(),
+
         _sectionTitle('Consent Record', Icons.verified_user_outlined),
-        const SizedBox(height: 12),
+
+        SizedBox(height: gap),
+
         TextFormField(
           controller: _consentByCtr,
-          decoration: const InputDecoration(
-            labelText: 'Consent Given By *',
-            hintText: 'Parent / Guardian name',
-            prefixIcon: Icon(Icons.how_to_reg_outlined),
-          ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Required' : null,
+          decoration: const InputDecoration(labelText: 'Consent Given By *'),
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
         ),
-        const SizedBox(height: 14),
+
+        SizedBox(height: gap),
+
         CheckboxListTile(
           value: _consentGiven,
+          contentPadding: EdgeInsets.zero,
+          activeColor: AppColors.primaryBlue,
           title: const Text(
-            'I confirm that informed consent has been obtained for collecting and processing this child\'s data for therapy coordination purposes.',
+            'I confirm informed consent has been obtained.',
             style: TextStyle(fontSize: 13),
           ),
-          activeColor: AppColors.primaryBlue,
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
           onChanged: (v) => setState(() => _consentGiven = v ?? false),
         ),
+
         if (!_consentGiven)
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Text('Consent is required to proceed',
-                style: TextStyle(color: AppColors.softCoral, fontSize: 12)),
+          const Text(
+            'Consent is required to proceed',
+            style: TextStyle(color: AppColors.softCoral, fontSize: 12),
           ),
       ],
     );
@@ -853,22 +1151,26 @@ class _EnrollmentWizardScreenState
       children: [
         Icon(icon, color: AppColors.primaryBlue, size: 22),
         const SizedBox(width: 8),
-        Text(text,
-            style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
       ],
     );
   }
 
   Widget _label(String text) => Text(
-        text,
-        style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      color: AppColors.textSecondary,
+    ),
+  );
 
   Widget _switchTile(String label, bool value, ValueChanged<bool> onChanged) {
     return SwitchListTile(
@@ -903,8 +1205,10 @@ class _EnrollmentWizardScreenState
               onTap: () => onTap(opt),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? color.withValues(alpha: 0.12)
@@ -920,7 +1224,9 @@ class _EnrollmentWizardScreenState
                   style: TextStyle(
                     fontSize: 13,
                     color: isSelected ? color : AppColors.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -929,21 +1235,52 @@ class _EnrollmentWizardScreenState
         ),
         if (validator != null) ...[
           const SizedBox(height: 4),
-          Text(validator,
-              style: const TextStyle(
-                  color: AppColors.softCoral, fontSize: 12)),
+          Text(
+            validator,
+            style: const TextStyle(color: AppColors.softCoral, fontSize: 12),
+          ),
         ],
       ],
     );
   }
 
+  Widget _therapistDropdown(List list, String target) {
+    return DropdownButtonFormField<String>(
+      value: _therapistAssignments[target],
+      isExpanded: true,
+      decoration: const InputDecoration(
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+      hint: const Text('Unassigned'),
+      items: [
+        const DropdownMenuItem(value: null, child: Text('— Unassigned —')),
+        ...list.map(
+          (u) => DropdownMenuItem(
+            value: u.id,
+            child: Text(u.name, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ],
+      onChanged: (v) => setState(() => _therapistAssignments[target] = v),
+    );
+  }
+
   static const _dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  static const _dayFullNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  static const _dayFullNames = [
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+  ];
 
   Widget _buildSchedulePicker(String target, _ScheduleEntry? sched) {
-    final days      = sched?.days ?? [];
-    final fromTime  = sched?.fromTime;
-    final toTime    = sched?.toTime;
+    final days = sched?.days ?? [];
+    final fromTime = sched?.fromTime;
+    final toTime = sched?.toTime;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -955,11 +1292,14 @@ class _EnrollmentWizardScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Session Schedule',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryBlue)),
+          const Text(
+            'Session Schedule',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryBlue,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: List.generate(7, (i) {
@@ -973,9 +1313,9 @@ class _EnrollmentWizardScreenState
                       selected ? updated.remove(i) : updated.add(i);
                       updated.sort();
                       _therapistSchedules[target] = _ScheduleEntry(
-                        days:     updated,
+                        days: updated,
                         fromTime: fromTime ?? '09:00',
-                        toTime:   toTime   ?? '10:00',
+                        toTime: toTime ?? '10:00',
                       );
                     });
                   },
@@ -1020,9 +1360,9 @@ class _EnrollmentWizardScreenState
                     time: fromTime,
                     onPicked: (t) => setState(() {
                       _therapistSchedules[target] = _ScheduleEntry(
-                        days:     days,
+                        days: days,
                         fromTime: t,
-                        toTime:   toTime ?? '10:00',
+                        toTime: toTime ?? '10:00',
                       );
                     }),
                   ),
@@ -1034,9 +1374,9 @@ class _EnrollmentWizardScreenState
                     time: toTime,
                     onPicked: (t) => setState(() {
                       _therapistSchedules[target] = _ScheduleEntry(
-                        days:     days,
+                        days: days,
                         fromTime: fromTime ?? '09:00',
-                        toTime:   t,
+                        toTime: t,
                       );
                     }),
                   ),
@@ -1048,7 +1388,9 @@ class _EnrollmentWizardScreenState
               Text(
                 '${days.map((d) => _dayFullNames[d]).join(', ')}  •  $fromTime – $toTime',
                 style: const TextStyle(
-                    fontSize: 12, color: AppColors.primaryBlue),
+                  fontSize: 12,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ],
           ],
@@ -1080,7 +1422,11 @@ class _ScheduleEntry {
   final List<int> days;
   final String fromTime;
   final String toTime;
-  const _ScheduleEntry({required this.days, required this.fromTime, required this.toTime});
+  const _ScheduleEntry({
+    required this.days,
+    required this.fromTime,
+    required this.toTime,
+  });
 }
 
 // ── Time picker button ────────────────────────────────────────────────────────
@@ -1088,7 +1434,11 @@ class _TimePickerButton extends StatelessWidget {
   final String label;
   final String? time;
   final void Function(String) onPicked;
-  const _TimePickerButton({required this.label, required this.time, required this.onPicked});
+  const _TimePickerButton({
+    required this.label,
+    required this.time,
+    required this.onPicked,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1098,7 +1448,10 @@ class _TimePickerButton extends StatelessWidget {
         final initial = parts != null
             ? TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]))
             : TimeOfDay.now();
-        final picked = await showTimePicker(context: context, initialTime: initial);
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: initial,
+        );
         if (picked != null) {
           onPicked(
             '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
@@ -1114,13 +1467,19 @@ class _TimePickerButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+            const Icon(
+              Icons.access_time,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               time != null ? '$label: $time' : label,
               style: TextStyle(
                 fontSize: 13,
-                color: time != null ? AppColors.textPrimary : AppColors.textSecondary,
+                color: time != null
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
             ),
           ],
@@ -1135,8 +1494,11 @@ class _StepDot extends StatelessWidget {
   final int index;
   final bool done;
   final bool current;
-  const _StepDot(
-      {required this.index, required this.done, required this.current});
+  const _StepDot({
+    required this.index,
+    required this.done,
+    required this.current,
+  });
 
   @override
   Widget build(BuildContext context) {

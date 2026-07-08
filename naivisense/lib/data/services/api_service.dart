@@ -9,20 +9,29 @@ class ApiService {
   late final Dio _dio;
 
   ApiService() {
-    _dio = Dio(BaseOptions(
-      baseUrl:        AppConstants.baseUrl,
-      connectTimeout: AppConstants.connectTimeout,
-      receiveTimeout: AppConstants.receiveTimeout,
-      headers: {'Content-Type': 'application/json'},
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: AppConstants.baseUrl,
+        connectTimeout: AppConstants.connectTimeout,
+        receiveTimeout: AppConstants.receiveTimeout,
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
     _dio.interceptors.add(_AuthInterceptor());
   }
 
   Future<Response<T>> get<T>(String path, {Map<String, dynamic>? params}) =>
       _dio.get<T>(path, queryParameters: params);
 
-  Future<Response<T>> post<T>(String path, {dynamic data}) =>
-      _dio.post<T>(path, data: data);
+  Future<Response<T>> post<T>(String path, {dynamic data}) async {
+    try {
+      final res = await _dio.post<T>(path, data: data);
+      return res;
+    } catch (e) {
+      print("❌ API ERROR: $e");
+      rethrow;
+    }
+  }
 
   Future<Response<T>> put<T>(String path, {dynamic data}) =>
       _dio.put<T>(path, data: data);
@@ -30,8 +39,7 @@ class ApiService {
   Future<Response<T>> patch<T>(String path, {dynamic data}) =>
       _dio.patch<T>(path, data: data);
 
-  Future<Response<T>> delete<T>(String path) =>
-      _dio.delete<T>(path);
+  Future<Response<T>> delete<T>(String path) => _dio.delete<T>(path);
 
   Future<Response<T>> postForm<T>(String path, FormData data) =>
       _dio.post<T>(path, data: data);
@@ -77,7 +85,7 @@ class _AuthInterceptor extends Interceptor {
       );
       final data = res.data as Map<String, dynamic>;
       await StorageService.instance.saveTokens(
-        access:  (data['access_token'] ?? data['accessToken']) as String,
+        access: (data['access_token'] ?? data['accessToken']) as String,
         refresh: (data['refresh_token'] ?? data['refreshToken']) as String,
       );
       return true;

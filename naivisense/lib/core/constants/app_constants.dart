@@ -10,10 +10,10 @@ class AppConstants {
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // Secure storage keys
-  static const String keyAccessToken  = 'ns_access_token';
+  static const String keyAccessToken = 'ns_access_token';
   static const String keyRefreshToken = 'ns_refresh_token';
-  static const String keyUserRole     = 'ns_user_role';
-  static const String keyUserId       = 'ns_user_id';
+  static const String keyUserRole = 'ns_user_role';
+  static const String keyUserId = 'ns_user_id';
 
   // Hive boxes
   static const String boxPendingProofs = 'pending_proofs';
@@ -21,5 +21,5 @@ class AppConstants {
   // Rating scale
   static const int ratingMin = 1;
   static const int ratingMax = 10;
-  static const int pageSize  = 20;
+  static const int pageSize = 20;
 }

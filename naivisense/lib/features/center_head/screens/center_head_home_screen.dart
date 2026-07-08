@@ -28,109 +28,146 @@ class CenterHeadHomeScreen extends ConsumerWidget {
     final therapists = ref.watch(therapistsOverviewProvider);
     final parents = ref.watch(allParentsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(user?.name ?? 'Center Head'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.payments_outlined),
-            tooltip: 'Payments',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PaymentsScreen()),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+        final isDesktop = constraints.maxWidth >= 1024;
+
+        final horizontalPadding = isDesktop
+            ? constraints.maxWidth * 0.0005
+            : isTablet
+            ? 24.0
+            : 16.0;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: Text(user?.name ?? 'Center Head'),
+            backgroundColor: AppColors.surface,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.payments_outlined),
+                tooltip: 'Payments',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PaymentsScreen()),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'Settings',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () => ref.read(authProvider.notifier).logout(),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton.extended(
+                heroTag: 'enroll_therapist',
+                onPressed: () => context.push('/center-head/enroll-therapist'),
+                backgroundColor: AppColors.mintGreen,
+                icon: const Icon(
+                  Icons.psychology_outlined,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Enroll Therapist',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton.extended(
+                heroTag: 'register_parent',
+                onPressed: () => context.push('/center-head/enroll-parent'),
+                backgroundColor: const Color(0xFF9B59B6),
+                icon: const Icon(Icons.family_restroom, color: Colors.white),
+                label: const Text(
+                  'Register Parent',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              FloatingActionButton.extended(
+                heroTag: 'enroll_child',
+                onPressed: () => context.push('/center-head/enroll'),
+                backgroundColor: AppColors.primaryBlue,
+                icon: const Icon(
+                  Icons.person_add_outlined,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Enroll Child',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          ),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'enroll_therapist',
-            onPressed: () => context.push('/center-head/enroll-therapist'),
-            backgroundColor: AppColors.mintGreen,
-            icon: const Icon(Icons.psychology_outlined, color: Colors.white),
-            label: const Text(
-              'Enroll Therapist',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+          body: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 1200 : double.infinity,
+              ),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(centerChildrenProvider);
+                  ref.invalidate(therapistsOverviewProvider);
+                  ref.invalidate(allParentsProvider);
+                },
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 16,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          _buildGradientHeader(context, user?.name ?? ''),
+                          const SizedBox(height: 20),
+                          _buildStats(
+                            context,
+                            children,
+                            therapists,
+                            parents,
+                            isTablet,
+                            isDesktop,
+                          ),
+                          const SizedBox(height: 24),
+                          _buildTherapistsSection(context, therapists),
+                          const SizedBox(height: 24),
+                          _buildParentsSection(context, parents),
+                          const SizedBox(height: 24),
+                          _buildChildrenSection(context, children),
+                        ]),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'register_parent',
-            onPressed: () => context.push('/center-head/enroll-parent'),
-            backgroundColor: const Color(0xFF9B59B6),
-            icon: const Icon(Icons.family_restroom, color: Colors.white),
-            label: const Text(
-              'Register Parent',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'enroll_child',
-            onPressed: () => context.push('/center-head/enroll'),
-            backgroundColor: AppColors.primaryBlue,
-            icon: const Icon(Icons.person_add_outlined, color: Colors.white),
-            label: const Text(
-              'Enroll Child',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(centerChildrenProvider);
-          ref.invalidate(therapistsOverviewProvider);
-          ref.invalidate(allParentsProvider);
-        },
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildGradientHeader(context, user?.name ?? ''),
-                  const SizedBox(height: 20),
-                  _buildStats(context, children, therapists, parents),
-                  const SizedBox(height: 24),
-                  _buildTherapistsSection(context, therapists),
-                  const SizedBox(height: 24),
-                  _buildParentsSection(context, parents),
-                  const SizedBox(height: 24),
-                  _buildChildrenSection(context, children),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -167,12 +204,21 @@ class CenterHeadHomeScreen extends ConsumerWidget {
     AsyncValue<List<ChildModel>> children,
     AsyncValue<List<TherapistOverview>> therapists,
     AsyncValue<List<UserModel>> parents,
+    bool isTablet,
+    bool isDesktop,
   ) {
     final childCount = children.valueOrNull?.length ?? 0;
     final therapistCount = therapists.valueOrNull?.length ?? 0;
     final parentCount = parents.valueOrNull?.length ?? 0;
+
+    final crossAxisCount = isDesktop
+        ? 6
+        : isTablet
+        ? 4
+        : 3;
+
     return GridView.count(
-      crossAxisCount: 3,
+      crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
@@ -369,9 +415,15 @@ class _TherapistAdminCardState extends State<_TherapistAdminCard> {
                       ],
                     ),
                   ),
-                  Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
-                    color: AppColors.textSecondary,
+                  GestureDetector(
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Icon(
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
