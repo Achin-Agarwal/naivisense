@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:naivisense/core/utils/responsive.dart';
+import 'package:naivisense/features/therapist/widgets/child_dropdown.dart';
+import 'package:naivisense/features/therapist/widgets/date_time_selector.dart';
+import 'package:naivisense/features/therapist/widgets/duration_selector.dart';
+import 'package:naivisense/features/therapist/widgets/session_mode_selector.dart';
+import 'package:naivisense/features/therapist/widgets/session_title.dart';
+import 'package:naivisense/features/therapist/widgets/session_type_selector.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/date_utils.dart';
 import '../../../data/models/child.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../providers/therapist_provider.dart';
@@ -22,13 +28,19 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   String _type = 'speech';
   String _mode = 'offline';
   int _durationMin = 45;
-  DateTime _date = DateTime.now().add(const Duration(hours: 1));
-  TimeOfDay _time = TimeOfDay.now();
+  final DateTime initial = DateTime.now().add(const Duration(hours: 1));
+
+  late DateTime _date;
+  late TimeOfDay _time;
 
   @override
   void initState() {
     super.initState();
+
     _childId = widget.preselectedChild?.id;
+
+    _date = initial;
+    _time = TimeOfDay.fromDateTime(initial);
   }
 
   static const _sessionTypes = [
@@ -91,16 +103,16 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
       'duration_min': _durationMin,
       'scheduled_at': _scheduledAt.toUtc().toIso8601String(),
     };
+    if (_scheduledAt.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a future date and time.')),
+      );
+      return;
+    }
 
     final ok = await ref.read(createSessionProvider.notifier).submit(payload);
     if (ok && mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Session scheduled successfully'),
-          backgroundColor: AppColors.mintGreen,
-        ),
-      );
+      Navigator.pop(context, true);
     }
   }
 
@@ -111,18 +123,9 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive breakpoints
-        final isMobile = constraints.maxWidth < 600;
-        final isTablet =
-            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
-        final isDesktop = constraints.maxWidth >= 1024;
+        final responsive = Responsive(context);
 
-        // Responsive values
-        final horizontalPadding = isMobile ? 20.0 : 28.0;
-
-        final sectionSpacing = isMobile ? 24.0 : 28.0;
-
-        final sessionGridCount = isDesktop ? 4 : 2;
+        final horizontalPadding = responsive.horizontalPadding;
 
         Widget body = Column(
           children: [
@@ -133,330 +136,94 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                 padding: EdgeInsets.all(horizontalPadding),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 700),
+                    constraints: BoxConstraints(maxWidth: responsive.formWidth),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── Child ───────────────────────────
-                          _sectionTitle(
-                            'Select Child',
-                            Icons.child_care_outlined,
-                            isMobile,
+                          SectionTitle(
+                            title: 'Select Child',
+                            icon: Icons.child_care_outlined,
                           ),
 
-                          const SizedBox(height: 12),
+                          responsive.gapH(12, tablet: 14, desktop: 16),
 
-                          children.when(
-                            loading: () => const LinearProgressIndicator(),
-
-                            error: (e, _) => Text(
-                              'Failed to load: $e',
-                              style: const TextStyle(
-                                color: AppColors.softCoral,
-                              ),
-                            ),
-
-                            data: (list) => DropdownButtonFormField<String>(
-                              initialValue: _childId,
-                              decoration: const InputDecoration(
-                                prefixIcon: Icon(Icons.person_outline),
-                                hintText: 'Select child',
-                              ),
-                              items: list
-                                  .map(
-                                    (c) => DropdownMenuItem(
-                                      value: c.id,
-                                      child: Text(
-                                        '${c.name} (${c.ageYears} yrs)',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) => setState(() => _childId = v),
-                              validator: (v) =>
-                                  v == null ? 'Select a child' : null,
-                            ),
+                          ChildDropdown(
+                            children: children,
+                            selectedChildId: _childId,
+                            onChanged: (value) {
+                              setState(() => _childId = value);
+                            },
                           ),
 
-                          SizedBox(height: sectionSpacing),
+                          responsive.gapH(24, tablet: 28, desktop: 32),
 
-                          // ── Session Type ────────────────────
-                          _sectionTitle(
-                            'Session Type',
-                            Icons.category_outlined,
-                            isMobile,
+                          SectionTitle(
+                            title: 'Session Type',
+                            icon: Icons.category_outlined,
                           ),
 
-                          const SizedBox(height: 12),
+                          responsive.gapH(12, tablet: 14, desktop: 16),
 
-                          GridView.count(
-                            crossAxisCount: sessionGridCount,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10,
-                            childAspectRatio: isMobile ? 2.6 : 3.0,
-                            children: _sessionTypes.map((t) {
-                              final key = t['key'] as String;
-
-                              final label = t['label'] as String;
-
-                              final icon = t['icon'] as IconData;
-
-                              final sel = _type == key;
-
-                              return GestureDetector(
-                                onTap: () => setState(() => _type = key),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 150),
-                                  decoration: BoxDecoration(
-                                    color: sel
-                                        ? AppColors.primaryBlue.withValues(
-                                            alpha: 0.1,
-                                          )
-                                        : AppColors.surface,
-                                    border: Border.all(
-                                      color: sel
-                                          ? AppColors.primaryBlue
-                                          : AppColors.divider,
-                                      width: sel ? 1.5 : 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        icon,
-                                        size: isMobile ? 16 : 18,
-                                        color: sel
-                                            ? AppColors.primaryBlue
-                                            : AppColors.textSecondary,
-                                      ),
-
-                                      const SizedBox(width: 6),
-
-                                      Flexible(
-                                        child: Text(
-                                          label,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: isMobile ? 12 : 13,
-                                            fontWeight: sel
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                            color: sel
-                                                ? AppColors.primaryBlue
-                                                : AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                          SessionTypeSelector(
+                            sessionTypes: _sessionTypes,
+                            selectedType: _type,
+                            onSelected: (value) {
+                              setState(() => _type = value);
+                            },
                           ),
 
-                          SizedBox(
-                            height: sectionSpacing,
-                          ), // ── Date & Time ─────────────────────
-                          _sectionTitle(
-                            'Date & Time',
-                            Icons.schedule_outlined,
-                            isMobile,
+                          responsive.gapH(24, tablet: 28, desktop: 32),
+
+                          SectionTitle(
+                            title: 'Date & Time',
+                            icon: Icons.schedule_outlined,
                           ),
 
-                          const SizedBox(height: 12),
+                          responsive.gapH(12, tablet: 14, desktop: 16),
 
-                          isMobile
-                              ? Row(
-                                  children: [
-                                    Expanded(
-                                      child: _tappableField(
-                                        label: AppDateUtils.formatDate(_date),
-                                        icon: Icons.calendar_today_outlined,
-                                        onTap: _pickDate,
-                                        isMobile: isMobile,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: _tappableField(
-                                        label: _time.format(context),
-                                        icon: Icons.access_time_outlined,
-                                        onTap: _pickTime,
-                                        isMobile: isMobile,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Expanded(
-                                      child: _tappableField(
-                                        label: AppDateUtils.formatDate(_date),
-                                        icon: Icons.calendar_today_outlined,
-                                        onTap: _pickDate,
-                                        isMobile: isMobile,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _tappableField(
-                                        label: _time.format(context),
-                                        icon: Icons.access_time_outlined,
-                                        onTap: _pickTime,
-                                        isMobile: isMobile,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                          SizedBox(height: sectionSpacing),
-
-                          // ── Duration ─────────────────────────
-                          _sectionTitle(
-                            'Duration',
-                            Icons.timelapse_outlined,
-                            isMobile,
+                          DateTimeSelector(
+                            date: _date,
+                            time: _time,
+                            onDateTap: _pickDate,
+                            onTimeTap: _pickTime,
                           ),
 
-                          const SizedBox(height: 12),
+                          responsive.gapH(24, tablet: 28, desktop: 32),
 
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _durations.map((d) {
-                              final sel = _durationMin == d;
-
-                              return GestureDetector(
-                                onTap: () => setState(() => _durationMin = d),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 150),
-                                  constraints: BoxConstraints(
-                                    minWidth: isMobile ? 60 : 80,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: isMobile ? 14 : 18,
-                                    vertical: isMobile ? 12 : 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: sel
-                                        ? AppColors.primaryBlue.withValues(
-                                            alpha: 0.1,
-                                          )
-                                        : AppColors.surface,
-                                    border: Border.all(
-                                      color: sel
-                                          ? AppColors.primaryBlue
-                                          : AppColors.divider,
-                                      width: sel ? 1.5 : 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$d m',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 13 : 14,
-                                      fontWeight: sel
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      color: sel
-                                          ? AppColors.primaryBlue
-                                          : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                          SectionTitle(
+                            title: 'Duration',
+                            icon: Icons.timelapse_outlined,
                           ),
 
-                          SizedBox(height: sectionSpacing),
+                          responsive.gapH(12, tablet: 14, desktop: 16),
 
-                          // ── Session Mode ─────────────────────
-                          _sectionTitle(
-                            'Session Mode',
-                            Icons.videocam_outlined,
-                            isMobile,
+                          DurationSelector(
+                            durations: _durations,
+                            selectedDuration: _durationMin,
+                            onSelected: (duration) {
+                              setState(() => _durationMin = duration);
+                            },
                           ),
 
-                          const SizedBox(height: 12),
+                          responsive.gapH(24, tablet: 28, desktop: 32),
 
-                          Row(
-                            children: ['offline', 'online'].map((m) {
-                              final sel = _mode == m;
-
-                              final label = m == 'offline'
-                                  ? 'In-Person'
-                                  : 'Online';
-
-                              final icon = m == 'offline'
-                                  ? Icons.people_outlined
-                                  : Icons.video_call_outlined;
-
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _mode = m),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 150),
-                                    margin: EdgeInsets.only(
-                                      right: m == 'offline' ? 8 : 0,
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: isMobile ? 14 : 18,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: sel
-                                          ? AppColors.primaryBlue.withValues(
-                                              alpha: 0.1,
-                                            )
-                                          : AppColors.surface,
-                                      border: Border.all(
-                                        color: sel
-                                            ? AppColors.primaryBlue
-                                            : AppColors.divider,
-                                        width: sel ? 1.5 : 1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          icon,
-                                          size: isMobile ? 22 : 24,
-                                          color: sel
-                                              ? AppColors.primaryBlue
-                                              : AppColors.textSecondary,
-                                        ),
-
-                                        const SizedBox(height: 4),
-
-                                        Text(
-                                          label,
-                                          style: TextStyle(
-                                            fontSize: isMobile ? 13 : 14,
-                                            fontWeight: sel
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                            color: sel
-                                                ? AppColors.primaryBlue
-                                                : AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                          SectionTitle(
+                            title: 'Session Mode',
+                            icon: Icons.videocam_outlined,
                           ),
 
-                          const SizedBox(height: 16),
+                          responsive.gapH(12, tablet: 14, desktop: 16),
+
+                          SessionModeSelector(
+                            selectedMode: _mode,
+                            onSelected: (value) {
+                              setState(() => _mode = value);
+                            },
+                          ),
+
+                          responsive.gapH(16, tablet: 20, desktop: 24),
                         ],
                       ),
                     ),
@@ -475,7 +242,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                   state.error!,
                   style: TextStyle(
                     color: AppColors.softCoral,
-                    fontSize: isMobile ? 13 : 14,
+                    fontSize: responsive.sp(13, tablet: 14, desktop: 15),
                   ),
                 ),
               ),
@@ -490,7 +257,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               ),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 700),
+                  constraints: BoxConstraints(maxWidth: responsive.formWidth),
                   child: AppButton(
                     label: 'Schedule Session',
                     loading: state.loading,
@@ -504,10 +271,10 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         );
 
         // Center on tablet and desktop
-        if (!isMobile) {
+        if (responsive.isTablet || responsive.isDesktop) {
           body = Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
+              constraints: BoxConstraints(maxWidth: responsive.formWidth),
               child: body,
             ),
           );
@@ -520,80 +287,21 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
           appBar: AppBar(
             title: Text(
               'Schedule Session',
-              style: TextStyle(fontSize: isMobile ? 18 : 20),
+              style: TextStyle(
+                fontSize: responsive.sp(18, tablet: 20, desktop: 22),
+              ),
             ),
             backgroundColor: AppColors.surface,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, true),
             ),
           ),
 
           body: SafeArea(child: body),
         );
       },
-    );
-  }
-
-  Widget _sectionTitle(String text, IconData icon, bool isMobile) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.primaryBlue, size: isMobile ? 20 : 22),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: isMobile ? 16 : 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _tappableField({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isMobile,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 14 : 16,
-          vertical: isMobile ? 14 : 16,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.divider),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: isMobile ? 18 : 20,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 15,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

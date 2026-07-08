@@ -94,51 +94,110 @@ class _ScheduleCard extends StatelessWidget {
     final responsive = Responsive(context);
 
     return AppCard(
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: responsive.h(48, tablet: 52, desktop: 56),
-            decoration: BoxDecoration(
-              color: AppColors.primaryBlue,
-              borderRadius: responsive.borderRadius(2),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.w(6, tablet: 8, desktop: 10),
+          vertical: responsive.h(2),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 5,
+              height: responsive.h(56, tablet: 60, desktop: 64),
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
 
-          responsive.gapW(12, tablet: 16, desktop: 20),
+            responsive.gapW(12, tablet: 14, desktop: 16),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  toTitleCase(slot.childName),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: responsive.sp(14, tablet: 15, desktop: 16),
-                  ),
-                ),
+            Expanded(
+              child: responsive.isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          toTitleCase(slot.childName),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: responsive.sp(
+                                  15,
+                                  tablet: 16,
+                                  desktop: 17,
+                                ),
+                              ),
+                        ),
 
-                responsive.gapH(8, tablet: 10, desktop: 12),
+                        responsive.gapH(8),
 
-                Text(
-                  '${slot.therapyType} • ${slot.schedule.timeLabel}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: responsive.sp(12, tablet: 13, desktop: 14),
-                  ),
-                ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _ScheduleInfoChip(
+                              icon: Icons.psychology_outlined,
+                              text: slot.therapyType,
+                            ),
+                            _ScheduleInfoChip(
+                              icon: Icons.schedule,
+                              text: slot.schedule.timeLabel,
+                            ),
+                            _ScheduleInfoChip(
+                              icon: Icons.calendar_today_outlined,
+                              text: slot.schedule.daysLabel,
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            toTitleCase(slot.childName),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: responsive.sp(
+                                    15,
+                                    tablet: 16,
+                                    desktop: 17,
+                                  ),
+                                ),
+                          ),
+                        ),
 
-                Text(
-                  slot.schedule.daysLabel,
-                  style: TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontSize: responsive.sp(12, tablet: 13, desktop: 14),
-                  ),
-                ),
-              ],
+                        Expanded(
+                          flex: 3,
+                          child: Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 10,
+                            runSpacing: 8,
+                            children: [
+                              _ScheduleInfoChip(
+                                icon: Icons.psychology_outlined,
+                                text: slot.therapyType,
+                              ),
+                              _ScheduleInfoChip(
+                                icon: Icons.schedule,
+                                text: slot.schedule.timeLabel,
+                              ),
+                              _ScheduleInfoChip(
+                                icon: Icons.calendar_today_outlined,
+                                text: slot.schedule.daysLabel,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -154,4 +213,36 @@ class ScheduleSlotRow {
     required this.therapyType,
     required this.schedule,
   });
+}
+
+class _ScheduleInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ScheduleInfoChip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = Responsive(context);
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.w(10),
+        vertical: responsive.h(6),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 6,
+        children: [
+          Icon(icon, size: responsive.sp(14), color: AppColors.primaryBlue),
+          Text(text, style: TextStyle(fontSize: responsive.sp(12))),
+        ],
+      ),
+    );
+  }
 }

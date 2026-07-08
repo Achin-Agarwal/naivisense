@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:naivisense/core/utils/responsive.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/child.dart';
 import '../../../data/models/therapist_overview.dart';
@@ -207,6 +208,7 @@ class CenterHeadHomeScreen extends ConsumerWidget {
     bool isTablet,
     bool isDesktop,
   ) {
+    final r = Responsive(context);
     final childCount = children.valueOrNull?.length ?? 0;
     final therapistCount = therapists.valueOrNull?.length ?? 0;
     final parentCount = parents.valueOrNull?.length ?? 0;
@@ -216,14 +218,18 @@ class CenterHeadHomeScreen extends ConsumerWidget {
         : isTablet
         ? 4
         : 3;
-
+    final childAspectRatio = r.isDesktop
+        ? 1.3
+        : r.isTablet
+        ? 1.2
+        : 2.4;
     return GridView.count(
       crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 0.9,
+      childAspectRatio: childAspectRatio,
       children: [
         StatTile(
           label: 'Children',

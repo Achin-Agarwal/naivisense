@@ -13,30 +13,19 @@ import 'create_session_screen.dart';
 class TherapistHomeScreen extends ConsumerWidget {
   const TherapistHomeScreen({super.key});
 
-  static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 1024;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).valueOrNull?.user;
     final children = ref.watch(therapistChildrenProvider);
     final sessions = ref.watch(therapistSessionsProvider);
+
     final pending = ref.watch(therapistPendingVerificationsProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
         final responsive = Responsive(context);
 
-        final isMobile = width < mobileBreakpoint;
-        final isTablet = width >= mobileBreakpoint && width < tabletBreakpoint;
-        final isDesktop = width >= tabletBreakpoint;
-
-        final horizontalPadding = isMobile
-            ? 16.0
-            : isTablet
-            ? 24.0
-            : 32.0;
+        final horizontalPadding = responsive.horizontalPadding;
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -44,11 +33,7 @@ class TherapistHomeScreen extends ConsumerWidget {
             title: Text(
               'Hi, ${user?.name.split(' ').first ?? 'Therapist'}',
               style: TextStyle(
-                fontSize: isDesktop
-                    ? 24
-                    : isTablet
-                    ? 22
-                    : 18,
+                fontSize: responsive.sp(18, tablet: 22, desktop: 24),
               ),
             ),
             backgroundColor: AppColors.surface,
@@ -87,11 +72,11 @@ class TherapistHomeScreen extends ConsumerWidget {
 
                           responsive.gapH(12, tablet: 16, desktop: 20),
 
-                          ScheduledSessionsWidget(children: children),
+                          ChildrenListSection(children: children),
 
                           responsive.gapH(12, tablet: 16, desktop: 20),
 
-                          ChildrenListSection(children: children),
+                          ScheduledSessionsWidget(children: children),
                         ]),
                       ),
                     ),
@@ -100,22 +85,46 @@ class TherapistHomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _showCreateSession(context, ref),
-            icon: const Icon(Icons.add),
-            label: Text(isMobile ? 'New' : 'New Session'),
-            backgroundColor: AppColors.primaryBlue,
-            foregroundColor: Colors.white,
-          ),
+          // floatingActionButtonLocation:
+          //     FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: responsive.isMobile
+              ? FloatingActionButton(
+                  onPressed: () async {
+                    final created = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CreateSessionScreen(),
+                      ),
+                    );
+
+                    if (created == true) {
+                      await ref.refresh(therapistSessionsProvider.future);
+                    }
+                  },
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  child: const Icon(Icons.add),
+                )
+              : FloatingActionButton.extended(
+                  onPressed: () async {
+                    final created = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CreateSessionScreen(),
+                      ),
+                    );
+
+                    if (created == true) {
+                      await ref.refresh(therapistSessionsProvider.future);
+                    }
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('New Session'),
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                ),
         );
       },
-    );
-  }
-
-  void _showCreateSession(BuildContext context, WidgetRef ref) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CreateSessionScreen()),
     );
   }
 }
