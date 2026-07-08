@@ -8,6 +8,7 @@ const PORT = process.env.PORT ?? 8000;
 
 async function main() {
   try {
+    console.log('App is running on port: ' + PORT);
     await connectDB();
     await connectRedis();
     app.listen(PORT, () => {

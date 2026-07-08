@@ -49,3 +49,6 @@ naivisense/pubspec.lock
 # Root package files (not needed)
 package-lock.json
 node_modules/
+
+#work-track
+work.md

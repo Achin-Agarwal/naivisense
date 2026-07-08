@@ -5,9 +5,10 @@ export type VideoVisibility = 'internal' | 'parent_visible';
 export type VideoUploaderRole = 'parent' | 'therapist' | 'clinical_psychologist' | 'center_head';
 
 export interface IVideo extends Document {
-  child_id:            mongoose.Types.ObjectId;
-  uploaded_by:         mongoose.Types.ObjectId;
-  uploaded_by_role:    VideoUploaderRole;
+  child_id?:            mongoose.Types.ObjectId;
+  assigned_children:    mongoose.Types.ObjectId[];
+  uploaded_by:          mongoose.Types.ObjectId;
+  uploaded_by_role:     VideoUploaderRole;
   title:               string;
   description?:        string;
   category:            VideoCategory;
@@ -24,12 +25,13 @@ export interface IVideo extends Document {
 
 const videoSchema = new Schema<IVideo>(
   {
-    child_id:            { type: Schema.Types.ObjectId, ref: 'Child', required: true },
+    child_id:            { type: Schema.Types.ObjectId, ref: 'Child' },
+    assigned_children:   { type: [{ type: Schema.Types.ObjectId, ref: 'Child' }], default: [] },
     uploaded_by:         { type: Schema.Types.ObjectId, ref: 'User',  required: true },
     uploaded_by_role:    { type: String, enum: ['parent', 'therapist', 'clinical_psychologist', 'center_head'], required: true },
     title:               { type: String, required: true },
     description:         { type: String },
-    category:            { type: String, enum: ['concern', 'improvement', 'session', 'review', 'clinical_observation', 'education'], required: true },
+    category:            { type: String, enum: ['concern', 'improvement', 'session', 'review', 'clinical_observation', 'education'], default: 'education' },
     url:                 { type: String, required: true },
     thumbnail_url:       { type: String },
     cloudinary_public_id:{ type: String, required: true },
@@ -43,5 +45,6 @@ const videoSchema = new Schema<IVideo>(
 
 videoSchema.index({ child_id: 1, category: 1 });
 videoSchema.index({ child_id: 1, visibility: 1 });
+videoSchema.index({ assigned_children: 1 });
 
 export const VideoModel = mongoose.model<IVideo>('Video', videoSchema);

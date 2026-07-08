@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+import { Worker } from 'bullmq';
+import { env }  from '../config/env';
+import logger     from '../utils/logger';
+=======
 import { Worker }             from 'bullmq';
 import { redis }              from '../config/redis';
 import logger                 from '../utils/logger';
@@ -191,6 +196,7 @@ async function rebuildSnapshot(childId: string): Promise<void> {
 
   logger.info({ childId, version: newVersion, attendancePct, homePlanPct, dietPlanPct }, 'Snapshot rebuilt');
 }
+>>>>>>> 621065d26cd57f5b6029f004fd0285600a34d548
 
 export const snapshotWorker = new Worker(
   'snapshot.rebuild',
@@ -198,7 +204,15 @@ export const snapshotWorker = new Worker(
     const { childId } = job.data as { childId: string };
     await rebuildSnapshot(childId);
   },
-  { connection: redis, concurrency: 5 },
+  { 
+    connection: { 
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+    }, 
+    concurrency: 5 
+  },
 );
 
 snapshotWorker.on('failed', (job, err) => {

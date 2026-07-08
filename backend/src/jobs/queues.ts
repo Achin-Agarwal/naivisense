@@ -1,7 +1,14 @@
 import { Queue }  from 'bullmq';
-import { redis }  from '../config/redis';
+import { env } from '../config/env';
 
-const opts = { connection: redis };
+const opts = { 
+  connection: { 
+    url: env.REDIS_URL,
+    maxRetriesPerRequest: null,
+    enableOfflineQueue: false,
+    lazyConnect: true,
+  }
+};
 
 export const snapshotQueue = new Queue('snapshot.rebuild', opts);
 export const chunkQueue    = new Queue('chunk.from-event', opts);

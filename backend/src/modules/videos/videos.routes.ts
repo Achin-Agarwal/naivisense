@@ -19,10 +19,10 @@ router.post(
 router.get('/',     Ctrl.list);
 router.get('/:id',  Ctrl.getOne);
 
-router.patch(
-  '/:id',
-  requireRole('parent', 'therapist', 'clinical_psychologist', 'center_head'),
-  Ctrl.update,
-);
+router.patch('/:id', requireRole('parent', 'therapist', 'clinical_psychologist', 'center_head'), Ctrl.update);
+router.delete('/:id', requireRole('parent', 'therapist', 'clinical_psychologist', 'center_head'), Ctrl.remove);
+
+router.post('/:id/assign', requireRole('therapist', 'clinical_psychologist', 'center_head'), Ctrl.assign);
+router.delete('/:id/assign/:childId', requireRole('therapist', 'clinical_psychologist', 'center_head'), Ctrl.deassign);
 
 export default router;

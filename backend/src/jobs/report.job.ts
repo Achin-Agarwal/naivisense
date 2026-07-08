@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+import { Worker } from 'bullmq';
+import { env }                  from '../config/env';
+import logger                     from '../utils/logger';
+=======
 import { Worker }             from 'bullmq';
 import { redis }              from '../config/redis';
 import logger                 from '../utils/logger';
@@ -98,6 +103,7 @@ async function generateMonthlyReportForChild(
 
   logger.info({ childId, period: periodStart }, 'Monthly report generated');
 }
+>>>>>>> 621065d26cd57f5b6029f004fd0285600a34d548
 
 export const reportWorker = new Worker(
   'report.monthly',
@@ -128,7 +134,14 @@ export const reportWorker = new Worker(
 
     logger.info({ jobId: job.id, childCount: children.length }, 'Monthly reports done');
   },
-  { connection: redis },
+  { 
+    connection: { 
+      url: env.REDIS_URL,
+      maxRetriesPerRequest: null,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+    }
+  },
 );
 
 reportWorker.on('failed', (job, err) => {
