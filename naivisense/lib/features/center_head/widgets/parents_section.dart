@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:naivisense/data/models/child.dart';
 import 'package:naivisense/data/models/user.dart';
 
 import '../../../core/utils/responsive.dart';
@@ -8,8 +9,13 @@ import 'parent_admin_card.dart';
 
 class ParentsSection extends StatelessWidget {
   final AsyncValue<List<UserModel>> parents;
+  final AsyncValue<List<ChildModel>> children;
 
-  const ParentsSection({super.key, required this.parents});
+  const ParentsSection({
+    super.key,
+    required this.parents,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,20 +36,48 @@ class ParentsSection extends StatelessWidget {
         parents.when(
           loading: () => const sw.LoadingWidget(),
           error: (e, _) => sw.ErrorWidget(message: e.toString()),
-          data: (list) {
-            if (list.isEmpty) {
-              return const sw.EmptyWidget(
-                message: 'No parents registered yet',
-                icon: Icons.family_restroom,
-              );
-            }
+          data: (parentList) {
+            return children.when(
+              loading: () => const sw.LoadingWidget(),
+              error: (e, _) => sw.ErrorWidget(message: e.toString()),
+              data: (allChildren) {
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    int columns;
 
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: list.length,
-              separatorBuilder: (_, __) => r.gapH(8, tablet: 10, desktop: 12),
-              itemBuilder: (_, i) => ParentAdminCard(parent: list[i]),
+                    if (r.isDesktop) {
+                      columns = 3;
+                    } else if (r.isTablet) {
+                      columns = 2;
+                    } else {
+                      columns = 1;
+                    }
+
+                    final spacing = r.w(16);
+                    final cardWidth =
+                        (constraints.maxWidth - spacing * (columns - 1)) /
+                        columns;
+
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: r.h(16),
+                      children: parentList.map((parent) {
+                        final parentChildren = allChildren
+                            .where((c) => c.parentId == parent.id)
+                            .toList();
+
+                        return SizedBox(
+                          width: cardWidth,
+                          child: ParentAdminCard(
+                            parent: parent,
+                            children: parentChildren,
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                );
+              },
             );
           },
         ),

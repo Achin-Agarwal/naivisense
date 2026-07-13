@@ -42,21 +42,12 @@ class StandardItemCardState extends State<StandardItemCard> {
 
   void _notify() {
     final data = {'score': _score ?? 0, 'remarks': _remarksCtrl.text};
-
-    debugPrint('_StandardItemCard: $data');
-
     widget.onChanged(data);
   }
 
   @override
   Widget build(BuildContext context) {
-    print("========== STANDARD ITEM CARD ==========");
-    print("CARD STEP 1 : build()");
-    print("Item = ${widget.item.label}");
-
     final r = Responsive(context);
-
-    print("CARD STEP 2 : Responsive created");
 
     return Card(
       margin: EdgeInsets.only(bottom: r.h(10, tablet: 12, desktop: 14)),
@@ -72,8 +63,6 @@ class StandardItemCardState extends State<StandardItemCard> {
           children: [
             Builder(
               builder: (_) {
-                print("CARD STEP 3 : Title");
-
                 return Text(
                   widget.item.label,
                   style: TextStyle(
@@ -86,39 +75,21 @@ class StandardItemCardState extends State<StandardItemCard> {
 
             Builder(
               builder: (_) {
-                print("CARD STEP 4 : Gap");
                 return r.gapH(10);
               },
             ),
 
             Builder(
               builder: (_) {
-                print("CARD STEP 5 : LayoutBuilder");
-
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    print("CARD STEP 6 : LayoutBuilder executed");
-                    print("maxWidth = ${constraints.maxWidth}");
-
                     final compact = constraints.maxWidth < 360;
-
-                    print("compact = $compact");
-
-                    print("CARD STEP 7 : Generating chips");
-
                     final chips = List.generate(4, (i) {
-                      print("Creating chip $i");
-
                       final selected = _score == i;
-
                       return Builder(
                         builder: (_) {
-                          print("Building chip $i");
-
                           return GestureDetector(
                             onTap: () {
-                              print("Tapped chip $i");
-
                               setState(() => _score = i);
                               _notify();
                             },
@@ -156,12 +127,7 @@ class StandardItemCardState extends State<StandardItemCard> {
                         },
                       );
                     });
-
-                    print("CARD STEP 8 : Chips generated");
-
                     if (compact) {
-                      print("CARD STEP 9 : Returning compact layout");
-
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -184,9 +150,6 @@ class StandardItemCardState extends State<StandardItemCard> {
                         ],
                       );
                     }
-
-                    print("CARD STEP 10 : Returning normal layout");
-
                     return Row(
                       children: [
                         Wrap(
@@ -217,15 +180,12 @@ class StandardItemCardState extends State<StandardItemCard> {
 
             Builder(
               builder: (_) {
-                print("CARD STEP 11 : Gap before TextField");
                 return r.gapH(10);
               },
             ),
 
             Builder(
               builder: (_) {
-                print("CARD STEP 12 : TextField");
-
                 return TextField(
                   controller: _remarksCtrl,
                   onChanged: (_) => _notify(),

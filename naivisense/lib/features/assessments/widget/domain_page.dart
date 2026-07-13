@@ -21,27 +21,13 @@ class DomainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("========== DOMAIN PAGE ==========");
-    print("STEP 1 : DomainPage build started");
-    print("Domain : ${domain.title}");
-    print("Type   : ${domain.type}");
-    print("Items  : ${domain.items.length}");
-
     final r = Responsive(context);
-
-    print("STEP 2 : Responsive created");
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        print("STEP 3 : LayoutBuilder");
-
         final cardMaxWidth = r.isMobile ? double.infinity : 560.0;
 
-        print("STEP 4 : cardMaxWidth = $cardMaxWidth");
-
         Widget wrapCard(Widget child) {
-          print("STEP 5 : wrapCard called");
-
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -50,8 +36,6 @@ class DomainPage extends StatelessWidget {
             ),
           );
         }
-
-        print("STEP 6 : About to return ListView");
 
         return ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -62,10 +46,8 @@ class DomainPage extends StatelessWidget {
             r.h(10, tablet: 12, desktop: 14),
           ),
           children: [
-            //---------------- HEADER ----------------
             Builder(
               builder: (_) {
-                print("STEP 7 : Header");
                 return wrapCard(
                   Container(
                     padding: r.allPadding(16, tablet: 18, desktop: 20),
@@ -78,12 +60,7 @@ class DomainPage extends StatelessWidget {
                     ),
                     child: LayoutBuilder(
                       builder: (context, headerConstraints) {
-                        print("STEP 8 : Header LayoutBuilder");
-
                         final compact = headerConstraints.maxWidth < 360;
-
-                        print("Compact = $compact");
-
                         final iconChip = Container(
                           padding: r.allPadding(10, tablet: 12, desktop: 14),
                           decoration: BoxDecoration(
@@ -124,20 +101,12 @@ class DomainPage extends StatelessWidget {
                             ),
                           ],
                         );
-
-                        print("STEP 9 : Header widgets created");
-
                         if (compact) {
-                          print("STEP 10 : Returning compact header");
-
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [iconChip, r.gapH(12), textBlock],
                           );
                         }
-
-                        print("STEP 11 : Returning normal header");
-
                         return Row(
                           children: [
                             iconChip,
@@ -155,21 +124,18 @@ class DomainPage extends StatelessWidget {
             if (domain.type == DomainType.standard) ...[
               Builder(
                 builder: (_) {
-                  print("STEP 12 : Standard Domain");
                   return r.gapH(12);
                 },
               ),
 
               Builder(
                 builder: (_) {
-                  print("STEP 13 : ScoreLegend");
                   return wrapCard(ScoreLegend(color: domain.color));
                 },
               ),
 
               Builder(
                 builder: (_) {
-                  print("STEP 14 : Gap");
                   return r.gapH(12);
                 },
               ),
@@ -178,19 +144,15 @@ class DomainPage extends StatelessWidget {
                 final index = entry.key;
                 final item = entry.value;
 
-                print("STEP 15 : Creating card $index -> ${item.key}");
-
                 return wrapCard(
                   Builder(
                     builder: (_) {
-                      print("STEP 16 : Building StandardItemCard ${item.key}");
 
                       return StandardItemCard(
                         item: item,
                         data: data[item.key] as Map<String, dynamic>? ?? {},
                         color: domain.color,
                         onChanged: (value) {
-                          print("STEP 17 : ${item.key} changed");
 
                           onChanged(item.key, value);
                         },
@@ -204,22 +166,17 @@ class DomainPage extends StatelessWidget {
             if (domain.type == DomainType.behavioral) ...[
               Builder(
                 builder: (_) {
-                  print("STEP 18 : Behavioral Domain");
                   return r.gapH(12);
                 },
               ),
 
               ...domain.items.asMap().entries.map((entry) {
                 final item = entry.value;
-
-                print("STEP 19 : Behavioral ${item.key}");
-
                 return wrapCard(
                   BehavioralItemCard(
                     item: item,
                     data: data[item.key] as Map<String, dynamic>? ?? {},
                     onChanged: (val) {
-                      print("STEP 20 : Behavioral changed ${item.key}");
                       onChanged(item.key, val);
                     },
                   ),
@@ -230,7 +187,6 @@ class DomainPage extends StatelessWidget {
             if (domain.type == DomainType.sensory) ...[
               Builder(
                 builder: (_) {
-                  print("STEP 21 : Sensory Domain");
                   return r.gapH(12);
                 },
               ),
@@ -253,15 +209,12 @@ class DomainPage extends StatelessWidget {
               ...domain.items.asMap().entries.map((entry) {
                 final item = entry.value;
 
-                print("STEP 22 : Sensory ${item.key}");
-
                 return wrapCard(
                   SensoryItemCard(
                     item: item,
                     data: data[item.key] as Map<String, dynamic>? ?? {},
                     color: domain.color,
                     onChanged: (val) {
-                      print("STEP 23 : Sensory changed ${item.key}");
                       onChanged(item.key, val);
                     },
                   ),
@@ -271,7 +224,6 @@ class DomainPage extends StatelessWidget {
 
             Builder(
               builder: (_) {
-                print("STEP 24 : Bottom Spacer");
                 return SizedBox(height: r.h(96, tablet: 110, desktop: 120));
               },
             ),

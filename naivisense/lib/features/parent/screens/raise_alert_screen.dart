@@ -23,15 +23,21 @@ class _RaiseAlertScreenState extends ConsumerState<RaiseAlertScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descCtr = TextEditingController();
 
-  String _alertType = 'behavioral';
+  String _alertType = 'aggression';
   String _severity = 'medium';
 
   static const _alertTypes = [
-    ('behavioral', Icons.psychology_outlined, 'Behavioral'),
-    ('medical', Icons.local_hospital_outlined, 'Medical'),
-    ('emotional', Icons.favorite_border, 'Emotional'),
-    ('academic', Icons.menu_book_outlined, 'Academic'),
-    ('social', Icons.group_outlined, 'Social'),
+    ('fever', Icons.thermostat_outlined, 'Fever'),
+    ('regression', Icons.trending_down_outlined, 'Regression'),
+    ('aggression', Icons.warning_amber_outlined, 'Aggression'),
+    ('seizure', Icons.health_and_safety_outlined, 'Seizure'),
+    ('sleep_issue', Icons.bedtime_outlined, 'Sleep Issue'),
+    ('injury', Icons.healing_outlined, 'Injury'),
+    (
+      'emotional_stress',
+      Icons.sentiment_dissatisfied_outlined,
+      'Emotional Stress',
+    ),
     ('other', Icons.more_horiz, 'Other'),
   ];
 
@@ -39,7 +45,7 @@ class _RaiseAlertScreenState extends ConsumerState<RaiseAlertScreen> {
     ('low', 'Low', AppColors.mintGreen),
     ('medium', 'Medium', AppColors.warmYellow),
     ('high', 'High', AppColors.softCoral),
-    ('critical', 'Critical', Color(0xFFB00020)),
+    // ('critical', 'Critical', Color(0xFFB00020)),
   ];
 
   @override
@@ -52,10 +58,10 @@ class _RaiseAlertScreenState extends ConsumerState<RaiseAlertScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final ok = await ref.read(alertProvider.notifier).submit({
-      'childId': widget.child.id,
+      'child_id': widget.child.id,
       'type': _alertType,
-      'severity': _severity,
       'description': _descCtr.text.trim(),
+      'severity': _severity,
     });
 
     if (!mounted) return;

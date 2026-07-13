@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:naivisense/core/theme/app_colors.dart';
+import 'package:naivisense/core/utils/responsive.dart';
+import 'package:naivisense/core/utils/string_utils.dart';
 import 'package:naivisense/data/models/therapist_overview.dart';
 import 'package:naivisense/shared/widgets/app_card.dart';
-
-import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/responsive.dart';
-import 'assigned_child_row.dart';
-import 'specialty_chip.dart';
 
 class TherapistAdminCard extends StatefulWidget {
   final TherapistOverview therapist;
@@ -23,152 +21,313 @@ class _TherapistAdminCardState extends State<TherapistAdminCard> {
   Widget build(BuildContext context) {
     final r = Responsive(context);
 
-    final t = widget.therapist;
-    final specialties = [...t.specialties, ...t.therapyMethods];
+    final therapist = widget.therapist;
+    final color = AppColors.mintGreen;
+
+    final visibleChildren = _expanded
+        ? therapist.children
+        : therapist.children.take(2).toList();
 
     return AppCard(
-      padding: EdgeInsets.zero,
+      padding: EdgeInsets.all(r.w(16, tablet: 18, desktop: 20)),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: EdgeInsets.all(r.w(16, tablet: 20, desktop: 24)),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: r.avatar(24, tablet: 26, desktop: 28),
-                    backgroundColor: AppColors.therapistGradient.colors.first
-                        .withValues(alpha: 0.15),
-                    child: Text(
-                      t.name.isNotEmpty ? t.name[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: AppColors.therapistGradient.colors.first,
-                        fontWeight: FontWeight.w700,
-                        fontSize: r.sp(18, tablet: 20, desktop: 22),
-                      ),
-                    ),
+          /// HEADER
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: r.avatar(22, tablet: 24, desktop: 26),
+                backgroundColor: color.withValues(alpha: .12),
+                child: Text(
+                  therapist.name.isNotEmpty
+                      ? therapist.name[0].toUpperCase()
+                      : "?",
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: r.sp(17),
                   ),
-                  r.gapW(12, tablet: 14, desktop: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.name,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: r.sp(16, tablet: 17, desktop: 18),
-                              ),
-                        ),
-                        if (t.qualification.isNotEmpty)
-                          Text(
-                            t.qualification,
-                            style: TextStyle(
-                              fontSize: r.sp(12, tablet: 13, desktop: 14),
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        Text(
-                          '${t.yearsExperience > 0 ? '${t.yearsExperience} yrs exp' : 'Exp not set'}'
-                          '  •  ${t.children.length} child${t.children.length == 1 ? '' : 'ren'}',
-                          style: TextStyle(
-                            fontSize: r.sp(12, tablet: 13, desktop: 14),
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => _expanded = !_expanded),
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Icon(
-                        _expanded ? Icons.expand_less : Icons.expand_more,
-                        size: r.icon(24, tablet: 26, desktop: 28),
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+
+              r.gapW(10),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      therapist.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: r.sp(16),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+
+                    SizedBox(height: r.h(2)),
+
+                    Text(
+                      therapist.phone,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: r.sp(12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.w(8),
+                  vertical: r.h(3),
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .12),
+                  borderRadius: BorderRadius.circular(r.radius(18)),
+                ),
+                child: Text(
+                  "${therapist.yearsExperience} yrs",
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: r.sp(10),
+                  ),
+                ),
+              ),
+            ],
           ),
 
-          // Specialties
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              r.w(16, tablet: 20, desktop: 24),
-              0,
-              r.w(16, tablet: 20, desktop: 24),
-              r.h(12, tablet: 14, desktop: 16),
-            ),
-            child: specialties.isEmpty
-                ? Text(
-                    'No specialties listed',
-                    style: TextStyle(
-                      fontSize: r.sp(11, tablet: 12, desktop: 13),
-                      color: AppColors.textSecondary.withValues(alpha: 0.6),
-                      fontStyle: FontStyle.italic,
+          SizedBox(height: r.h(12)),
+
+          const Divider(height: 1),
+
+          SizedBox(height: r.h(10)),
+
+          /// Qualification
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.school_outlined, size: r.icon(16), color: color),
+
+              r.gapW(6),
+
+              Expanded(
+                child: Text(
+                  therapist.qualification.isEmpty
+                      ? "Qualification not available"
+                      : therapist.qualification,
+                  style: TextStyle(fontSize: r.sp(12)),
+                ),
+              ),
+            ],
+          ),
+
+          if (therapist.specialties.isNotEmpty) ...[
+            SizedBox(height: r.h(12)),
+
+            Wrap(
+              spacing: r.w(6),
+              runSpacing: r.h(6),
+              children: therapist.specialties
+                  .map(
+                    (speciality) => Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: r.w(8),
+                        vertical: r.h(4),
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: .10),
+                        borderRadius: BorderRadius.circular(r.radius(16)),
+                      ),
+                      child: Text(
+                        speciality,
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                          fontSize: r.sp(11),
+                        ),
+                      ),
                     ),
                   )
-                : Wrap(
-                    spacing: r.w(6, tablet: 8, desktop: 10),
-                    runSpacing: r.h(6, tablet: 8, desktop: 10),
-                    children: specialties
-                        .map((s) => SpecialtyChip(label: s))
-                        .toList(),
+                  .toList(),
+            ),
+          ],
+
+          SizedBox(height: r.h(12)),
+
+          const Divider(height: 1),
+
+          SizedBox(height: r.h(10)),
+
+          /// CHILDREN HEADER
+          Row(
+            children: [
+              Icon(Icons.child_care, color: color, size: r.icon(16)),
+
+              r.gapW(6),
+
+              Text(
+                "Assigned Children",
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: r.sp(14),
+                ),
+              ),
+
+              const Spacer(),
+
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.w(8),
+                  vertical: r.h(2),
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .10),
+                  borderRadius: BorderRadius.circular(r.radius(16)),
+                ),
+                child: Text(
+                  "${therapist.children.length}",
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: r.sp(11),
                   ),
+                ),
+              ),
+            ],
           ),
 
-          if (_expanded && t.children.isNotEmpty) ...[
-            Divider(
-              height: 1,
-              indent: r.w(16, tablet: 20, desktop: 24),
-              endIndent: r.w(16, tablet: 20, desktop: 24),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                r.w(16, tablet: 20, desktop: 24),
-                r.h(10, tablet: 12, desktop: 14),
-                r.w(16, tablet: 20, desktop: 24),
-                r.h(4, tablet: 6, desktop: 8),
+          SizedBox(height: r.h(8)),
+          if (therapist.children.isEmpty)
+            Text(
+              "No assigned children",
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: r.sp(12),
               ),
-              child: Text(
-                'Assigned Children',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: r.sp(12, tablet: 13, desktop: 14),
-                ),
-              ),
-            ),
-            ...t.children.map(
-              (c) => AssignedChildRow(child: c, showTherapyType: true),
-            ),
-            r.gapH(8, tablet: 10, desktop: 12),
-          ],
+            )
+          else
+            ...visibleChildren.map(
+              (child) => Padding(
+                padding: EdgeInsets.only(bottom: r.h(8)),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.w(10),
+                    vertical: r.h(8),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: .06),
+                    borderRadius: BorderRadius.circular(r.radius(12)),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: r.avatar(14),
+                        backgroundColor: AppColors.primaryBlue.withValues(
+                          alpha: .12,
+                        ),
+                        child: Text(
+                          child.name.isNotEmpty
+                              ? child.name[0].toUpperCase()
+                              : "?",
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: r.sp(10),
+                          ),
+                        ),
+                      ),
 
-          if (_expanded && t.children.isEmpty) ...[
-            Divider(
-              height: 1,
-              indent: r.w(16, tablet: 20, desktop: 24),
-              endIndent: r.w(16, tablet: 20, desktop: 24),
-            ),
-            Padding(
-              padding: EdgeInsets.all(r.w(12, tablet: 14, desktop: 16)),
-              child: Text(
-                'No children assigned yet',
-                style: TextStyle(
-                  fontSize: r.sp(13, tablet: 14, desktop: 15),
-                  color: AppColors.textSecondary,
+                      r.gapW(8),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              toTitleCase(child.name),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: r.sp(13),
+                              ),
+                            ),
+
+                            if (child.diagnosis.isNotEmpty)
+                              Text(
+                                child.diagnosis.join(", "),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: r.sp(11),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(width: r.w(6)),
+
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: r.w(6),
+                          vertical: r.h(3),
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: .10),
+                          borderRadius: BorderRadius.circular(r.radius(12)),
+                        ),
+                        child: Text(
+                          child.therapyType,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                            fontSize: r.sp(10),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
+
+          if (therapist.children.length > 2)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _expanded = !_expanded;
+                  });
+                },
+                child: Text(
+                  _expanded
+                      ? "Show Less"
+                      : "+${therapist.children.length - 2} more",
+                  style: TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w600,
+                    fontSize: r.sp(12),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

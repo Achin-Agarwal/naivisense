@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:naivisense/data/models/therapist_overview.dart';
 
 import '../../../core/utils/responsive.dart';
@@ -29,7 +30,9 @@ class TherapistsSection extends StatelessWidget {
 
         therapists.when(
           loading: () => const sw.LoadingWidget(),
+
           error: (e, _) => sw.ErrorWidget(message: e.toString()),
+
           data: (list) {
             if (list.isEmpty) {
               return const sw.EmptyWidget(
@@ -38,12 +41,24 @@ class TherapistsSection extends StatelessWidget {
               );
             }
 
-            return ListView.separated(
+            return MasonryGridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+
+              crossAxisCount: r.isDesktop
+                  ? 3
+                  : r.isTablet
+                  ? 2
+                  : 1,
+
+              mainAxisSpacing: r.h(18),
+              crossAxisSpacing: r.w(18),
+
               itemCount: list.length,
-              separatorBuilder: (_, __) => r.gapH(8, tablet: 10, desktop: 12),
-              itemBuilder: (_, i) => TherapistAdminCard(therapist: list[i]),
+
+              itemBuilder: (context, index) {
+                return TherapistAdminCard(therapist: list[index]);
+              },
             );
           },
         ),

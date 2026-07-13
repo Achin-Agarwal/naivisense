@@ -29,7 +29,9 @@ class ChildrenSection extends StatelessWidget {
 
         children.when(
           loading: () => const sw.LoadingWidget(),
+
           error: (e, _) => sw.ErrorWidget(message: e.toString()),
+
           data: (list) {
             if (list.isEmpty) {
               return const sw.EmptyWidget(
@@ -38,12 +40,35 @@ class ChildrenSection extends StatelessWidget {
               );
             }
 
-            return ListView.separated(
+            int crossAxisCount;
+
+            if (r.isDesktop) {
+              crossAxisCount = 3;
+            } else if (r.isTablet) {
+              crossAxisCount = 2;
+            } else {
+              crossAxisCount = 1;
+            }
+
+            return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: list.length,
-              separatorBuilder: (_, __) => r.gapH(8, tablet: 10, desktop: 12),
-              itemBuilder: (_, i) => ChildAdminCard(child: list[i]),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: r.w(16),
+                mainAxisSpacing: r.h(16),
+
+                // Adjust if cards become too tall/short
+                childAspectRatio: r.isDesktop
+                    ? 1.15
+                    : r.isTablet
+                    ? 1.0
+                    : 1.25,
+              ),
+              itemBuilder: (context, index) {
+                return ChildAdminCard(child: list[index]);
+              },
             );
           },
         ),

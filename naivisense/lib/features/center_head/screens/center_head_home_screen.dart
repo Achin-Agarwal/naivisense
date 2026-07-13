@@ -19,7 +19,6 @@ class CenterHeadHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final r = Responsive(context);
-
     final user = ref.watch(authProvider).valueOrNull?.user;
     final children = ref.watch(centerChildrenProvider);
     final therapists = ref.watch(therapistsOverviewProvider);
@@ -160,7 +159,7 @@ class CenterHeadHomeScreen extends ConsumerWidget {
 
                           r.gapH(24, tablet: 28, desktop: 32),
 
-                          ParentsSection(parents: parents),
+                          ParentsSection(parents: parents, children: children),
 
                           r.gapH(24, tablet: 28, desktop: 32),
 

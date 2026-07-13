@@ -39,13 +39,9 @@ class _AssessmentWizardScreenState
   void initState() {
     super.initState();
 
-    print("STEP 2: Wizard initState");
-
     for (final d in kAssessmentDomains) {
       _domainData[d.key] = {};
     }
-
-    print(_domainData);
   }
 
   @override
@@ -103,7 +99,6 @@ class _AssessmentWizardScreenState
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final state = ref.watch(assessmentSubmitProvider);
-    print("STEP 4: Creating PageView");
     final pageView = PageView(
       controller: _pageController,
       physics: const NeverScrollableScrollPhysics(),
@@ -116,13 +111,11 @@ class _AssessmentWizardScreenState
             domain: domain,
             data: _domainData[domain.key]!,
             onChanged: (key, value) {
-              print('Wizard $key -> $value');
 
               setState(() {
                 _domainData[domain.key]![key] = value;
               });
 
-              print(_domainData.toString());
             },
           ),
         ),

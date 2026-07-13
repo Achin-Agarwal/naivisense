@@ -9,6 +9,8 @@ class SchedulePicker extends StatelessWidget {
   final ScheduleEntry? schedule;
   final List<String> dayLabels;
   final List<String> dayFullNames;
+  final bool required;
+
   final void Function(List<int> days, String? fromTime, String? toTime)
   onChanged;
 
@@ -19,6 +21,7 @@ class SchedulePicker extends StatelessWidget {
     required this.dayLabels,
     required this.dayFullNames,
     required this.onChanged,
+    this.required = false,
   });
 
   @override
@@ -29,11 +32,24 @@ class SchedulePicker extends StatelessWidget {
     final fromTime = schedule?.fromTime;
     final toTime = schedule?.toTime;
 
+    final showDayError = required && days.isEmpty;
+    final showTimeError =
+        required &&
+        days.isNotEmpty &&
+        (fromTime == null ||
+            fromTime.isEmpty ||
+            toTime == null ||
+            toTime.isEmpty);
+
     return Container(
       padding: EdgeInsets.all(r.w(12)),
       decoration: BoxDecoration(
         color: AppColors.primaryBlue.withValues(alpha: 0.05),
-        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: showDayError || showTimeError
+              ? AppColors.softCoral
+              : AppColors.primaryBlue.withValues(alpha: 0.2),
+        ),
         borderRadius: BorderRadius.circular(r.radius(10)),
       ),
       child: Column(
@@ -101,6 +117,17 @@ class SchedulePicker extends StatelessWidget {
             }),
           ),
 
+          if (showDayError) ...[
+            SizedBox(height: r.h(8)),
+            Text(
+              'Please select at least one day.',
+              style: TextStyle(
+                color: AppColors.softCoral,
+                fontSize: r.font(11, tablet: 12, desktop: 12),
+              ),
+            ),
+          ],
+
           if (days.isNotEmpty) ...[
             SizedBox(height: r.h(10)),
 
@@ -129,6 +156,17 @@ class SchedulePicker extends StatelessWidget {
                 ),
               ],
             ),
+
+            if (showTimeError) ...[
+              SizedBox(height: r.h(8)),
+              Text(
+                'Please select both start and end time.',
+                style: TextStyle(
+                  color: AppColors.softCoral,
+                  fontSize: r.font(11, tablet: 12, desktop: 12),
+                ),
+              ),
+            ],
 
             if (fromTime != null && toTime != null) ...[
               SizedBox(height: r.h(8)),

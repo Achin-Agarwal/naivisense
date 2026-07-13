@@ -42,12 +42,10 @@ class SessionsRepository {
     Map<String, dynamic> payload,
   ) async {
     try {
-      print('Updating session $sessionId with payload: $payload');
       final res = await _api.patch(
         '/session-timings/$sessionId',
         data: payload,
       );
-      print('Update session response: ${res.data}');
 
       return SessionModel.fromJson(res.data as Map<String, dynamic>);
     } catch (e) {

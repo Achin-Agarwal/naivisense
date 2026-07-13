@@ -25,9 +25,7 @@ class AlertsRepository {
 
   Future<AlertModel> createAlert(Map<String, dynamic> data) async {
     try {
-      print('Creating alert with data: $data'); // Debugging line
       final res = await _api.post('/alerts', data: data);
-      print('Alert created successfully: ${res.data}'); // Debugging line
       return AlertModel.fromJson(res.data as Map<String, dynamic>);
     } catch (e) {
       throw ErrorHandlerService.handle(e);
