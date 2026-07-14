@@ -15,8 +15,6 @@ import 'assessment_result_screen.dart';
 class AssessmentWizardScreen extends ConsumerStatefulWidget {
   final ChildModel child;
   final String assessmentType; // initial | monthly | quarterly
-
-  /// Previous assessment (used for prefilling)
   final AssessmentModel? previousAssessment;
 
   const AssessmentWizardScreen({
