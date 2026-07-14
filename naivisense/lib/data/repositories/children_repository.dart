@@ -15,7 +15,13 @@ class ChildrenRepository {
     try {
       final res = await _api.get('/children');
       final list = res.data as List<dynamic>;
-      return list.map((e) => ChildModel.fromJson(e as Map<String, dynamic>)).toList();
+      return list.map((e) {
+        try {
+          return ChildModel.fromJson(e as Map<String, dynamic>);
+        } catch (err, st) {
+          rethrow;
+        }
+      }).toList();
     } catch (e) {
       throw ErrorHandlerService.handle(e);
     }

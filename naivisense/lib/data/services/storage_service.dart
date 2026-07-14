@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
@@ -24,26 +25,50 @@ class StorageService {
 
   Future<void> _deleteAll() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.clear();
-    await _secure.deleteAll();
+
+    if (!kIsWeb) {
+      await _secure.deleteAll();
+    }
   }
 
   Future<void> saveTokens({
     required String access,
     required String refresh,
   }) async {
-    await _secure.write(key: AppConstants.keyAccessToken, value: access);
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
 
-    await _secure.write(key: AppConstants.keyRefreshToken, value: refresh);
+      await prefs.setString(AppConstants.keyAccessToken, access);
+
+      await prefs.setString(AppConstants.keyRefreshToken, refresh);
+    } else {
+      await _secure.write(key: AppConstants.keyAccessToken, value: access);
+
+      await _secure.write(key: AppConstants.keyRefreshToken, value: refresh);
+    }
   }
 
   Future<String?> getAccessToken() async {
-    final token = await _secure.read(key: AppConstants.keyAccessToken);
-    return token;
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+
+      return prefs.getString(AppConstants.keyAccessToken);
+    }
+
+    return _secure.read(key: AppConstants.keyAccessToken);
   }
 
-  Future<String?> getRefreshToken() =>
-      _secure.read(key: AppConstants.keyRefreshToken);
+  Future<String?> getRefreshToken() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+
+      return prefs.getString(AppConstants.keyRefreshToken);
+    }
+
+    return _secure.read(key: AppConstants.keyRefreshToken);
+  }
 
   Future<void> saveRole(String role) => _write(AppConstants.keyUserRole, role);
   Future<String?> getRole() => _read(AppConstants.keyUserRole);

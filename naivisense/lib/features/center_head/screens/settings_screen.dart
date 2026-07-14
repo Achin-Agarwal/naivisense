@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/services/api_service.dart';
 
-class _SettingsEntry {
+import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../data/services/api_service.dart';
+import '../widgets/setting_form.dart';
+import '../widgets/setting_row.dart';
+
+class SettingsEntry {
   final String key;
   final dynamic value;
-  const _SettingsEntry(this.key, this.value);
+
+  const SettingsEntry(this.key, this.value);
 }
 
-final _settingsProvider = FutureProvider<List<_SettingsEntry>>((ref) async {
+final _settingsProvider = FutureProvider<List<SettingsEntry>>((ref) async {
   final api = ref.read(apiServiceProvider);
+
   final res = await api.get('/settings');
+
   final list = res.data as List<dynamic>;
+
   return list.map((e) {
     final m = e as Map<String, dynamic>;
-    return _SettingsEntry(m['key'] as String, m['value']);
+
+    return SettingsEntry(m['key'] as String, m['value']);
   }).toList();
 });
 
@@ -96,91 +105,90 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive(context);
+
     final settings = ref.watch(_settingsProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // ==========================================
-        // Responsive Breakpoints
-        // ==========================================
-
-        final width = constraints.maxWidth;
-
-        final isMobile = width < 600;
-        final isTablet = width >= 600 && width < 1024;
-        final isDesktop = width >= 1024;
-
-        final horizontalPadding = isMobile ? 16.0 : 24.0;
-
-        final titleSize = isMobile ? 20.0 : 24.0;
-
         return Scaffold(
           backgroundColor: AppColors.background,
-
           resizeToAvoidBottomInset: true,
-
           appBar: AppBar(
-            title: Text(
-              "System Settings",
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: titleSize,
-              ),
-            ),
             backgroundColor: AppColors.surface,
             foregroundColor: AppColors.textPrimary,
             elevation: 0,
+            title: Text(
+              'System Settings',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: r.sp(20, tablet: 22, desktop: 24),
+              ),
+            ),
           ),
-
           body: RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(_settingsProvider);
             },
-
             child: CustomScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-
               slivers: [
-                /// Center content on Tablet/Desktop
                 SliverToBoxAdapter(
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth: isMobile ? double.infinity : 600,
+                        maxWidth: r.isMobile ? double.infinity : 600,
                       ),
-
-                      child: _buildAddForm(isMobile),
+                      child: SettingForm(
+                        keyController: _keyCtrl,
+                        valueController: _valueCtrl,
+                        saving: _saving,
+                        onSave: _upsert,
+                      ),
                     ),
                   ),
                 ),
-
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
+                    r.horizontalPadding,
                     0,
-                    horizontalPadding,
-                    24,
+                    r.horizontalPadding,
+                    r.verticalPadding + 8,
                   ),
-
                   sliver: settings.when(
                     loading: () => const SliverToBoxAdapter(
                       child: Center(child: CircularProgressIndicator()),
                     ),
 
                     error: (e, _) => SliverToBoxAdapter(
-                      child: Center(child: Text("Error: $e")),
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text(
+                            'Error: $e',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: r.sp(14, tablet: 15, desktop: 16),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
 
                     data: (list) {
                       if (list.isEmpty) {
-                        return const SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(32),
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(
+                              r.w(32, tablet: 36, desktop: 40),
+                            ),
+                            child: Center(
                               child: Text(
-                                "No settings configured",
+                                'No settings configured',
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
+                                  fontSize: r.sp(15, tablet: 16, desktop: 17),
                                 ),
                               ),
                             ),
@@ -189,16 +197,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       }
 
                       return SliverList(
-                        delegate: SliverChildBuilderDelegate((_, index) {
+                        delegate: SliverChildBuilderDelegate((context, index) {
                           return Center(
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                maxWidth: isMobile ? double.infinity : 700,
+                                maxWidth: r.isMobile ? double.infinity : 700,
                               ),
-
-                              child: _SettingRow(
+                              child: SettingRow(
                                 entry: list[index],
-
                                 onDelete: () {
                                   _delete(list[index].key);
                                 },
@@ -215,204 +221,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       },
-    );
-  }
-
-  // ===================================================
-  // Responsive Add Form
-  // ===================================================
-
-  Widget _buildAddForm(bool isMobile) {
-    return Container(
-      margin: EdgeInsets.all(isMobile ? 16 : 24),
-
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
-
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-
-        borderRadius: BorderRadius.circular(16),
-
-        border: Border.all(color: AppColors.divider),
-      ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-          Text(
-            "Add / Update Setting",
-
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: isMobile ? 15 : 18,
-            ),
-          ),
-
-          SizedBox(height: isMobile ? 16 : 20),
-
-          TextField(
-            controller: _keyCtrl,
-
-            decoration: const InputDecoration(
-              labelText: "Key (e.g. session_fee_default)",
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-          SizedBox(height: isMobile ? 12 : 16),
-
-          TextField(
-            controller: _valueCtrl,
-
-            decoration: const InputDecoration(
-              labelText: "Value",
-              border: OutlineInputBorder(),
-            ),
-          ),
-
-          SizedBox(height: isMobile ? 16 : 20),
-
-          SizedBox(
-            width: double.infinity,
-            height: isMobile ? 48 : 54,
-
-            child: ElevatedButton(
-              onPressed: _saving ? null : _upsert,
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-
-                foregroundColor: Colors.white,
-
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      "Save Setting",
-                      style: TextStyle(fontSize: isMobile ? 14 : 15),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-// =======================================================
-// Responsive Setting Row
-// =======================================================
-
-class _SettingRow extends StatelessWidget {
-  final _SettingsEntry entry;
-  final VoidCallback onDelete;
-
-  const _SettingRow({required this.entry, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
-    // ==========================================
-    // Responsive Breakpoints
-    // ==========================================
-
-    final isMobile = width < 600;
-    final isTablet = width >= 600 && width < 1024;
-
-    final horizontalPadding = isMobile ? 14.0 : 18.0;
-    final verticalPadding = isMobile ? 12.0 : 16.0;
-
-    final keyFont = isMobile ? 13.0 : 15.0;
-    final valueFont = isMobile ? 12.0 : 14.0;
-    final iconSize = isMobile ? 20.0 : 24.0;
-
-    return Container(
-      margin: EdgeInsets.only(bottom: isMobile ? 10 : 14),
-
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
-      ),
-
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-        border: Border.all(color: AppColors.divider),
-      ),
-
-      // ==========================================
-      // Wrap prevents overflow on small devices
-      // ==========================================
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        runSpacing: 12,
-        spacing: 12,
-
-        children: [
-          SizedBox(
-            width: isMobile
-                ? width * 0.60
-                : isTablet
-                ? 420
-                : 520,
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  entry.key,
-
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: keyFont,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  '${entry.value}',
-
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-
-                  style: TextStyle(
-                    fontSize: valueFont,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          IconButton(
-            onPressed: onDelete,
-            splashRadius: 24,
-            icon: Icon(
-              Icons.delete_outline,
-              size: iconSize,
-              color: AppColors.softCoral,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

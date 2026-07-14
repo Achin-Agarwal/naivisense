@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:naivisense/core/utils/responsive.dart';
+import 'package:naivisense/core/utils/string_utils.dart';
 import 'package:naivisense/data/models/child.dart';
 import 'package:naivisense/data/models/session.dart';
+import 'package:naivisense/features/therapist/screens/edit_session_screen.dart';
 import 'package:naivisense/features/therapist/screens/session_notes_screen.dart';
 import 'package:naivisense/features/therapist/widgets/session_card.dart';
 import 'package:naivisense/shared/widgets/state_widgets.dart' as sw;
@@ -30,7 +32,7 @@ class TodaySessions extends ConsumerWidget {
           ),
         ),
 
-        SizedBox(height: responsive.h(12, tablet: 16, desktop: 20)),
+        responsive.gapH(12, tablet: 16, desktop: 20),
 
         sessions.when(
           loading: () => const sw.LoadingWidget(),
@@ -44,6 +46,7 @@ class TodaySessions extends ConsumerWidget {
 
               return d.year == n.year && d.month == n.month && d.day == n.day;
             }).toList();
+            today.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
             if (today.isEmpty) {
               return const sw.EmptyWidget(
@@ -62,7 +65,7 @@ class TodaySessions extends ConsumerWidget {
               itemCount: today.length,
 
               separatorBuilder: (_, __) =>
-                  SizedBox(height: responsive.h(8, tablet: 10, desktop: 12)),
+                  responsive.gapH(8, tablet: 10, desktop: 12),
 
               itemBuilder: (_, i) {
                 final s = today[i];
@@ -70,14 +73,27 @@ class TodaySessions extends ConsumerWidget {
 
                 return SessionCard(
                   session: s,
-                  childName: childName,
-                  onNotes: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          SessionNotesScreen(session: s, childName: childName),
-                    ),
-                  ),
+                  childName: toTitleCase(childName),
+                  onEdit: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditSessionScreen(session: s),
+                      ),
+                    );
+                  },
+                  onNotes: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SessionNotesScreen(
+                          session: s,
+                          childName: childName,
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             );

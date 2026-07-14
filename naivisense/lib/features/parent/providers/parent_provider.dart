@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/alert.dart';
 import '../../../data/models/child.dart';
@@ -24,33 +26,41 @@ final parentChildrenProvider = FutureProvider<List<ChildModel>>(
   (ref) => ref.read(childrenRepositoryProvider).getChildren(),
 );
 
-final parentActivePlanProvider =
-    FutureProvider.family<HomePlanModel?, String>((ref, childId) =>
-        ref.read(homePlansRepositoryProvider).getActivePlan(childId));
+final parentActivePlanProvider = FutureProvider.family<HomePlanModel?, String>(
+  (ref, childId) =>
+      ref.read(homePlansRepositoryProvider).getActivePlan(childId),
+);
 
-final parentDietPlanProvider =
-    FutureProvider.family<DietPlanModel?, String>((ref, childId) =>
-        ref.read(dietPlansRepositoryProvider).getActivePlan(childId));
+final parentDietPlanProvider = FutureProvider.family<DietPlanModel?, String>(
+  (ref, childId) =>
+      ref.read(dietPlansRepositoryProvider).getActivePlan(childId),
+);
 
 final parentSessionsProvider =
-    FutureProvider.family<List<SessionModel>, String>((ref, childId) =>
-        ref.read(sessionsRepositoryProvider).getSessions(childId: childId));
+    FutureProvider.family<List<SessionModel>, String>(
+      (ref, childId) =>
+          ref.read(sessionsRepositoryProvider).getSessions(childId: childId),
+    );
 
-final parentAlertsProvider =
-    FutureProvider.family<List<AlertModel>, String>((ref, childId) =>
-        ref.read(alertsRepositoryProvider).getAlerts(childId));
+final parentAlertsProvider = FutureProvider.family<List<AlertModel>, String>(
+  (ref, childId) => ref.read(alertsRepositoryProvider).getAlerts(childId),
+);
 
-final parentGoalsProvider =
-    FutureProvider.family<List<GoalModel>, String>((ref, childId) =>
-        ref.read(goalsRepositoryProvider).getGoals(childId: childId));
+final parentGoalsProvider = FutureProvider.family<List<GoalModel>, String>(
+  (ref, childId) =>
+      ref.read(goalsRepositoryProvider).getGoals(childId: childId),
+);
 
-final parentReviewsProvider =
-    FutureProvider.family<List<ReviewModel>, String>((ref, childId) =>
-        ref.read(reviewsRepositoryProvider).getReviews(childId: childId));
+final parentReviewsProvider = FutureProvider.family<List<ReviewModel>, String>(
+  (ref, childId) =>
+      ref.read(reviewsRepositoryProvider).getReviews(childId: childId),
+);
 
 final parentVideosProvider =
-    FutureProvider.family<List<VideoItemModel>, String>((ref, childId) =>
-        ref.read(videosRepositoryProvider).getVideos(childId: childId));
+    FutureProvider.family<List<VideoItemModel>, String>(
+      (ref, childId) =>
+          ref.read(videosRepositoryProvider).getVideos(childId: childId),
+    );
 
 final parentPaymentsProvider = FutureProvider<List<PaymentModel>>(
   (ref) => ref.read(paymentsRepositoryProvider).getPayments(),
@@ -60,9 +70,11 @@ final parentChatThreadProvider = FutureProvider<ChatThreadModel>(
   (ref) => ref.read(chatbotRepositoryProvider).getOrCreateThread(),
 );
 
-final parentChatMessagesProvider = FutureProvider.family<List<ChatMessageModel>, String>(
-  (ref, threadId) => ref.read(chatbotRepositoryProvider).getMessages(threadId),
-);
+final parentChatMessagesProvider =
+    FutureProvider.family<List<ChatMessageModel>, String>(
+      (ref, threadId) =>
+          ref.read(chatbotRepositoryProvider).getMessages(threadId),
+    );
 
 // ── Chat send state ────────────────────────────────────────────────────────
 
@@ -79,7 +91,9 @@ class ChatSendNotifier extends Notifier<ChatSendState> {
   Future<ChatMessageModel?> send(String threadId, String message) async {
     state = const ChatSendState(loading: true);
     try {
-      final msg = await ref.read(chatbotRepositoryProvider).sendMessage(threadId, message);
+      final msg = await ref
+          .read(chatbotRepositoryProvider)
+          .sendMessage(threadId, message);
       state = const ChatSendState();
       ref.invalidate(parentChatMessagesProvider(threadId));
       return msg;
@@ -90,8 +104,9 @@ class ChatSendNotifier extends Notifier<ChatSendState> {
   }
 }
 
-final chatSendProvider =
-    NotifierProvider<ChatSendNotifier, ChatSendState>(ChatSendNotifier.new);
+final chatSendProvider = NotifierProvider<ChatSendNotifier, ChatSendState>(
+  ChatSendNotifier.new,
+);
 
 // ── Task log state ─────────────────────────────────────────────────────────
 
@@ -119,11 +134,9 @@ class TaskLogNotifier extends Notifier<TaskLogState> {
   }) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      await ref.read(homePlansRepositoryProvider).logTask(
-            planId: planId,
-            taskId: taskId,
-            note:   note,
-          );
+      await ref
+          .read(homePlansRepositoryProvider)
+          .logTask(planId: planId, taskId: taskId, note: note);
       state = state.copyWith(loading: false, success: true);
       return true;
     } catch (e) {
@@ -133,7 +146,9 @@ class TaskLogNotifier extends Notifier<TaskLogState> {
   }
 }
 
-final taskLogProvider = NotifierProvider<TaskLogNotifier, TaskLogState>(TaskLogNotifier.new);
+final taskLogProvider = NotifierProvider<TaskLogNotifier, TaskLogState>(
+  TaskLogNotifier.new,
+);
 
 // ── Alert creation state ───────────────────────────────────────────────────
 
@@ -168,22 +183,38 @@ class AlertNotifier extends Notifier<AlertState> {
   }
 }
 
-final alertProvider = NotifierProvider<AlertNotifier, AlertState>(AlertNotifier.new);
+final alertProvider = NotifierProvider<AlertNotifier, AlertState>(
+  AlertNotifier.new,
+);
 
 // ── Video upload state ─────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Upload State
+// ---------------------------------------------------------------------------
 
 class VideoUploadState {
   final bool loading;
   final String? error;
   final bool success;
-  const VideoUploadState({this.loading = false, this.error, this.success = false});
-  VideoUploadState copyWith({bool? loading, String? error, bool? success}) =>
-      VideoUploadState(
-        loading: loading ?? this.loading,
-        error: error,
-        success: success ?? this.success,
-      );
+
+  const VideoUploadState({
+    this.loading = false,
+    this.error,
+    this.success = false,
+  });
+
+  VideoUploadState copyWith({bool? loading, String? error, bool? success}) {
+    return VideoUploadState(
+      loading: loading ?? this.loading,
+      error: error,
+      success: success ?? this.success,
+    );
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Upload Notifier
+// ---------------------------------------------------------------------------
 
 class VideoUploadNotifier extends Notifier<VideoUploadState> {
   @override
@@ -192,28 +223,58 @@ class VideoUploadNotifier extends Notifier<VideoUploadState> {
   Future<bool> upload({
     required String childId,
     required String title,
-    required String filePath,
+
+    /// Mobile/Desktop
+    String? filePath,
+
+    /// Web
+    Uint8List? fileBytes,
+
+    /// Original filename
+    String? fileName,
+
     required String mimeType,
   }) async {
     state = state.copyWith(loading: true, error: null, success: false);
+    print('Starting video upload for childId: $childId, title: $title');
+
     try {
-      await ref.read(videosRepositoryProvider).uploadVideo(
-        childId:    childId,
-        title:      title,
-        category:   'parent_observation',
-        filePath:   filePath,
-        mimeType:   mimeType,
-        visibility: 'internal',
-      );
+      await ref
+          .read(videosRepositoryProvider)
+          .uploadVideo(
+            childId: childId,
+            title: title,
+            category: 'clinical_observation',
+
+            filePath: filePath,
+            fileBytes: fileBytes,
+            fileName: fileName,
+
+            mimeType: mimeType,
+            visibility: 'internal',
+          );
+
       state = state.copyWith(loading: false, success: true);
+
       ref.invalidate(parentVideosProvider(childId));
+
       return true;
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
+      print(
+        'Video upload failed for childId: $childId, title: $title, error: $e',
+      );
+
       return false;
     }
   }
 }
 
+// ---------------------------------------------------------------------------
+// Provider
+// ---------------------------------------------------------------------------
+
 final videoUploadProvider =
-    NotifierProvider<VideoUploadNotifier, VideoUploadState>(VideoUploadNotifier.new);
+    NotifierProvider<VideoUploadNotifier, VideoUploadState>(
+      VideoUploadNotifier.new,
+    );

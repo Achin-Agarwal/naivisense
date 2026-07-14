@@ -6,7 +6,11 @@ class ReportParams {
   final DateTime from;
   final DateTime to;
 
-  const ReportParams({required this.childId, required this.from, required this.to});
+  const ReportParams({
+    required this.childId,
+    required this.from,
+    required this.to,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -20,9 +24,12 @@ class ReportParams {
 }
 
 final progressReportProvider =
-    FutureProvider.family<ProgressReport, ReportParams>((ref, params) =>
-        ref.read(reportsRepositoryProvider).getProgress(
-              childId: params.childId,
-              from:    params.from,
-              to:      params.to,
-            ));
+    FutureProvider.family<ProgressReport, ReportParams>(
+      (ref, params) => ref
+          .read(reportsRepositoryProvider)
+          .getProgress(
+            childId: params.childId,
+            from: params.from,
+            to: params.to,
+          ),
+    );

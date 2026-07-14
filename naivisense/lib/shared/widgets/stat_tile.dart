@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/responsive.dart';
 
 class StatTile extends StatelessWidget {
   final String label;
@@ -17,54 +18,50 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final screenWidth = mediaQuery.size.width;
-    final textScale = mediaQuery.textScaler.scale(1.0);
+    final r = Responsive(context);
     final theme = Theme.of(context);
 
-    final paddingValue = (screenWidth * 0.04).clamp(12.0, 16.0);
-    final radiusValue = (screenWidth * 0.04).clamp(12.0, 16.0);
-    final iconSize = (screenWidth * 0.055 * textScale).clamp(18.0, 22.0);
-    final spacingLarge = (screenWidth * 0.02).clamp(6.0, 8.0);
-    final spacingSmall = (screenWidth * 0.006).clamp(1.0, 2.0);
-
     return Container(
-      padding: EdgeInsets.all(paddingValue),
+      padding: r.allPadding(10, tablet: 12, desktop: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(radiusValue),
+        borderRadius: r.borderRadius(12, tablet: 14, desktop: 16),
         border: Border.all(color: AppColors.divider),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  icon,
-                  color: iconColor ?? AppColors.primaryBlue,
-                  size: iconSize,
-                ),
-                SizedBox(height: spacingLarge),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.headlineSmall,
-                ),
-                SizedBox(height: spacingSmall),
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: iconColor ?? AppColors.primaryBlue,
+            size: r.icon(20, tablet: 22, desktop: 24),
+          ),
+
+          r.gapH(6),
+
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontSize: r.sp(18, tablet: 20, desktop: 22),
+              fontWeight: FontWeight.bold,
             ),
-          );
-        },
+          ),
+
+          r.gapH(2),
+
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: r.sp(12, tablet: 13, desktop: 14),
+            ),
+          ),
+        ],
       ),
     );
   }

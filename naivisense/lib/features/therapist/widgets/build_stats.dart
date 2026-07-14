@@ -29,7 +29,7 @@ class DashboardStats extends StatelessWidget {
           .value(mobile: 1, tablet: 3, desktop: 4)
           .toInt(),
 
-      childAspectRatio: responsive.w(2.8, tablet: 2, desktop: 1.5),
+      childAspectRatio: responsive.w(1.8, tablet: 1.2, desktop: 1.1),
 
       mainAxisSpacing: responsive.w(12, tablet: 16, desktop: 20),
 

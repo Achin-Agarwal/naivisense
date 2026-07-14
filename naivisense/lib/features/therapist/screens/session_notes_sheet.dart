@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:naivisense/core/utils/responsive.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/rating_slider.dart';
@@ -68,6 +69,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(sessionNotesProvider);
+    final r = Responsive(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -112,7 +114,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
 
                       child: Column(
                         children: [
-                          const SizedBox(height: 8),
+                          r.gapH(12, tablet: 16, desktop: 20),
 
                           Container(
                             width: 50,
@@ -138,14 +140,14 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                       ?.copyWith(fontSize: titleSize),
                                 ),
 
-                                const SizedBox(height: 24),
+                                r.gapH(12, tablet: 16, desktop: 20),
 
                                 Text(
                                   'Child Mood',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
 
-                                const SizedBox(height: 12),
+                                r.gapH(12, tablet: 16, desktop: 20),
 
                                 // ==========================
                                 // Wrap prevents overflow
@@ -194,7 +196,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                               ),
                                             ),
 
-                                            const SizedBox(height: 4),
+                                            r.gapH(4),
 
                                             Text(
                                               m,
@@ -209,7 +211,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   }).toList(),
                                 ),
 
-                                const SizedBox(height: 28),
+                                r.gapH(28, tablet: 32, desktop: 36),
 
                                 RatingSlider(
                                   label: 'Attention (1–10)',
@@ -221,7 +223,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   },
                                 ),
 
-                                const SizedBox(height: 16),
+                                r.gapH(16, tablet: 20, desktop: 24),
 
                                 RatingSlider(
                                   label: 'Communication (1–10)',
@@ -233,7 +235,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   },
                                 ),
 
-                                const SizedBox(height: 16),
+                                r.gapH(16, tablet: 20, desktop: 24),
 
                                 RatingSlider(
                                   label: 'Motor Skills (1–10)',
@@ -245,7 +247,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   },
                                 ),
 
-                                const SizedBox(height: 16),
+                                r.gapH(16, tablet: 20, desktop: 24),
 
                                 RatingSlider(
                                   label: 'Behavior (1–10)',
@@ -257,7 +259,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   },
                                 ),
 
-                                const SizedBox(height: 24),
+                                r.gapH(24, tablet: 28, desktop: 32),
 
                                 TextFormField(
                                   controller: _notesCtr,
@@ -269,7 +271,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   ),
                                 ),
 
-                                const SizedBox(height: 24),
+                                r.gapH(24, tablet: 28, desktop: 32),
 
                                 if (state.error != null)
                                   Padding(
@@ -288,7 +290,7 @@ class _SessionNotesSheetState extends ConsumerState<_SessionNotesSheet> {
                                   onPressed: _submit,
                                 ),
 
-                                const SizedBox(height: 24),
+                                r.gapH(24, tablet: 28, desktop: 32),
                               ],
                             ),
                           ),

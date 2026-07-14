@@ -17,64 +17,66 @@ import '../../../data/repositories/videos_repository.dart';
 import '../../../data/repositories/ai_repository.dart';
 import '../../../data/models/video_item.dart';
 
-final therapistChildrenProvider = FutureProvider<List<ChildModel>>((ref) =>
-    ref.read(childrenRepositoryProvider).getChildren());
+final therapistChildrenProvider = FutureProvider<List<ChildModel>>(
+  (ref) => ref.read(childrenRepositoryProvider).getChildren(),
+);
 
 final therapistChildSessionsProvider =
     FutureProvider.family<List<SessionModel>, String>(
-  (ref, childId) =>
-      ref.read(sessionsRepositoryProvider).getSessions(childId: childId),
-);
+      (ref, childId) =>
+          ref.read(sessionsRepositoryProvider).getSessions(childId: childId),
+    );
 
 final therapistChildPlanProvider =
     FutureProvider.family<HomePlanModel?, String>(
-  (ref, childId) =>
-      ref.read(homePlansRepositoryProvider).getActivePlan(childId),
-);
+      (ref, childId) =>
+          ref.read(homePlansRepositoryProvider).getActivePlan(childId),
+    );
 
 final therapistChildDietPlanProvider =
     FutureProvider.family<DietPlanModel?, String>(
-  (ref, childId) =>
-      ref.read(dietPlansRepositoryProvider).getActivePlan(childId),
-);
+      (ref, childId) =>
+          ref.read(dietPlansRepositoryProvider).getActivePlan(childId),
+    );
 
 // Therapist home uses /sessions/upcoming (no childId required)
-final therapistSessionsProvider = FutureProvider<List<SessionModel>>((ref) =>
-    ref.read(sessionsRepositoryProvider).getUpcoming());
+final therapistSessionsProvider = FutureProvider<List<SessionModel>>(
+  (ref) => ref.read(sessionsRepositoryProvider).getUpcoming(),
+);
 
 final therapistChildNextSessionProvider =
     FutureProvider.family<SessionModel?, String>(
-  (ref, childId) =>
-      ref.read(sessionsRepositoryProvider).getNextSession(childId: childId),
-);
+      (ref, childId) =>
+          ref.read(sessionsRepositoryProvider).getNextSession(childId: childId),
+    );
 
 final therapistChildGoalsProvider =
     FutureProvider.family<List<GoalModel>, String>(
-  (ref, childId) =>
-      ref.read(goalsRepositoryProvider).getGoals(childId: childId),
-);
+      (ref, childId) =>
+          ref.read(goalsRepositoryProvider).getGoals(childId: childId),
+    );
 
 final therapistChildReviewsProvider =
     FutureProvider.family<List<ReviewModel>, String>(
-  (ref, childId) =>
-      ref.read(reviewsRepositoryProvider).getReviews(childId: childId),
-);
+      (ref, childId) =>
+          ref.read(reviewsRepositoryProvider).getReviews(childId: childId),
+    );
 
 final therapistChildVideosProvider =
     FutureProvider.family<List<VideoItemModel>, String>(
-  (ref, childId) =>
-      ref.read(videosRepositoryProvider).getVideos(childId: childId),
-);
+      (ref, childId) =>
+          ref.read(videosRepositoryProvider).getVideos(childId: childId),
+    );
 
 final therapistAiDraftsProvider =
     FutureProvider.family<List<AiDraftModel>, String>(
-  (ref, childId) =>
-      ref.read(aiRepositoryProvider).listDrafts(childId),
-);
+      (ref, childId) => ref.read(aiRepositoryProvider).listDrafts(childId),
+    );
 
 final therapistPendingVerificationsProvider =
-    FutureProvider<List<VerificationItem>>((ref) =>
-        ref.read(verificationRepositoryProvider).getPending());
+    FutureProvider<List<VerificationItem>>(
+      (ref) => ref.read(verificationRepositoryProvider).getPending(),
+    );
 
 // ── AI Generation ─────────────────────────────────────────────────────────
 
@@ -119,7 +121,9 @@ class AiGenerateNotifier extends Notifier<AiGenerateState> {
 }
 
 final aiGenerateProvider =
-    NotifierProvider<AiGenerateNotifier, AiGenerateState>(AiGenerateNotifier.new);
+    NotifierProvider<AiGenerateNotifier, AiGenerateState>(
+      AiGenerateNotifier.new,
+    );
 
 class SessionNotesState {
   final bool loading;
@@ -147,11 +151,26 @@ class SessionNotesNotifier extends Notifier<SessionNotesState> {
       state = SessionNotesState(error: e.toString());
     }
   }
+
+  Future<void> update(String sessionId, Map<String, dynamic> notes) async {
+    state = const SessionNotesState(loading: true);
+
+    try {
+      await ref.read(sessionsRepositoryProvider).updateNotes(sessionId, notes);
+
+      state = const SessionNotesState(success: true);
+
+      ref.invalidate(therapistSessionsProvider);
+    } catch (e) {
+      state = SessionNotesState(error: e.toString());
+    }
+  }
 }
 
 final sessionNotesProvider =
     NotifierProvider<SessionNotesNotifier, SessionNotesState>(
-        SessionNotesNotifier.new);
+      SessionNotesNotifier.new,
+    );
 
 // ── Create Session ─────────────────────────────────────────────────────────
 
@@ -159,7 +178,11 @@ class CreateSessionState {
   final bool loading;
   final String? error;
   final bool success;
-  const CreateSessionState({this.loading = false, this.error, this.success = false});
+  const CreateSessionState({
+    this.loading = false,
+    this.error,
+    this.success = false,
+  });
   CreateSessionState copyWith({bool? loading, String? error, bool? success}) =>
       CreateSessionState(
         loading: loading ?? this.loading,
@@ -173,14 +196,20 @@ class CreateSessionNotifier extends Notifier<CreateSessionState> {
   CreateSessionState build() => const CreateSessionState();
 
   Future<bool> submit(Map<String, dynamic> payload) async {
-    state = state.copyWith(loading: true, error: null);
+    state = state.copyWith(loading: true);
+
     try {
       await ref.read(sessionsRepositoryProvider).createSession(payload);
-      state = state.copyWith(loading: false, success: true);
       ref.invalidate(therapistSessionsProvider);
+
+      state = state.copyWith(loading: false, success: true);
+
       return true;
     } catch (e) {
+      print(e);
+
       state = state.copyWith(loading: false, error: e.toString());
+
       return false;
     }
   }
@@ -188,4 +217,5 @@ class CreateSessionNotifier extends Notifier<CreateSessionState> {
 
 final createSessionProvider =
     NotifierProvider<CreateSessionNotifier, CreateSessionState>(
-        CreateSessionNotifier.new);
+      CreateSessionNotifier.new,
+    );

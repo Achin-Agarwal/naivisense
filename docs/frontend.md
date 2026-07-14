@@ -977,6 +977,8 @@ class SessionRepository {
 
   Future<List<Session>> getUpcoming() async {
     final res = await _api.dio.get('/sessions/upcoming');
+    print("Upcoming sessions:");
+  print(res.data);
     return (res.data as List).map((j) => Session.fromJson(j)).toList();
   }
 
