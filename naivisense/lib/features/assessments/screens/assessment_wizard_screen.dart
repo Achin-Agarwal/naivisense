@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:naivisense/core/utils/responsive.dart';
+import 'package:naivisense/data/models/assessment.dart';
 import 'package:naivisense/features/assessments/widget/assessment_navigation.dart';
 import 'package:naivisense/features/assessments/widget/domain_page.dart';
 import 'package:naivisense/features/assessments/widget/review_page.dart';
@@ -15,10 +16,14 @@ class AssessmentWizardScreen extends ConsumerStatefulWidget {
   final ChildModel child;
   final String assessmentType; // initial | monthly | quarterly
 
+  /// Previous assessment (used for prefilling)
+  final AssessmentModel? previousAssessment;
+
   const AssessmentWizardScreen({
     super.key,
     required this.child,
     required this.assessmentType,
+    this.previousAssessment,
   });
 
   @override
@@ -39,8 +44,21 @@ class _AssessmentWizardScreenState
   void initState() {
     super.initState();
 
+    // Initialize all domains
     for (final d in kAssessmentDomains) {
       _domainData[d.key] = {};
+    }
+
+    // Prefill using latest if available, otherwise domainData
+    final prefill = widget.previousAssessment?.prefillData;
+
+    if (prefill != null) {
+      for (final entry in prefill.entries) {
+        if (entry.value is Map) {
+          _domainData[entry.key] =
+              Map<String, dynamic>.from(entry.value as Map);
+        }
+      }
     }
   }
 
@@ -87,8 +105,10 @@ class _AssessmentWizardScreenState
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                AssessmentResultScreen(assessment: result, child: widget.child),
+            builder: (_) => AssessmentResultScreen(
+              assessment: result,
+              child: widget.child,
+            ),
           ),
         );
       });
@@ -99,34 +119,6 @@ class _AssessmentWizardScreenState
   Widget build(BuildContext context) {
     final r = Responsive(context);
     final state = ref.watch(assessmentSubmitProvider);
-    final pageView = PageView(
-      controller: _pageController,
-      physics: const NeverScrollableScrollPhysics(),
-      onPageChanged: (index) {
-        setState(() => _currentPage = index);
-      },
-      children: [
-        ...kAssessmentDomains.map(
-          (domain) => DomainPage(
-            domain: domain,
-            data: _domainData[domain.key]!,
-            onChanged: (key, value) {
-
-              setState(() {
-                _domainData[domain.key]![key] = value;
-              });
-
-            },
-          ),
-        ),
-        ReviewPage(
-          domainData: _domainData,
-          loading: state.loading,
-          error: state.error,
-          onSubmit: _submit,
-        ),
-      ],
-    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -141,9 +133,9 @@ class _AssessmentWizardScreenState
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: r.sp(16, tablet: 18, desktop: 20),
-            fontWeight: FontWeight.w600,
-          ),
+                fontSize: r.sp(16, tablet: 18, desktop: 20),
+                fontWeight: FontWeight.w600,
+              ),
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(r.h(5, tablet: 6, desktop: 6)),
